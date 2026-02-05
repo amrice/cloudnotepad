@@ -24,6 +24,10 @@ export function Home() {
         onSuccess: (newNote) => {
           navigate(`/note/${newNote.id}`);
         },
+        onError: (error) => {
+          console.error('Create note error:', error);
+          alert('创建笔记失败，请重试');
+        },
       }
     );
   };

@@ -1,6 +1,6 @@
 import type { APIResponse } from '@/types/auth';
 import { getAuthToken } from '@/stores/authStore';
-import { API_CONFIG } from '@/constants';
+import { API_CONFIG, STORAGE_KEYS } from '@/constants';
 
 class ApiClient {
   private baseUrl: string;
@@ -35,7 +35,7 @@ class ApiClient {
       // 处理特殊错误码
       if (data.code === 401) {
         // 未登录，清除 token 并刷新页面
-        localStorage.removeItem('auth_token');
+        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
         window.location.href = '/login';
       }
       throw new Error(data.message || '请求失败');

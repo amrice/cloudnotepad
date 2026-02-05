@@ -10,6 +10,7 @@ import { useEffect, useState } from 'react';
 // 应用初始化检查
 function AppInitializer({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
+  const { isAuthenticated, token, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -20,21 +21,47 @@ function AppInitializer({ children }: { children: React.ReactNode }) {
       return;
     }
 
-    // 检查服务器端是否已设置密码
-    fetch('/api/auth/check-setup')
-      .then(res => res.json())
-      .then(data => {
-        if (data.code === 0 && !data.data.hasSetup) {
+    const init = async () => {
+      try {
+        // 检查服务器端是否已设置密码
+        const setupRes = await fetch('/api/auth/check-setup');
+        const setupData = await setupRes.json();
+
+        if (setupData.code === 0 && !setupData.data.hasSetup) {
           if (location.pathname !== '/setup') {
             navigate('/setup', { replace: true });
           }
+          setLoading(false);
+          return;
         }
+
+        // 如果有 token，验证其有效性
+        if (token && isAuthenticated) {
+          const verifyRes = await fetch('/api/auth/verify', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`,
+            },
+          });
+          const verifyData = await verifyRes.json();
+
+          if (verifyData.code !== 0 || !verifyData.data?.valid) {
+            logout();
+            if (location.pathname !== '/login' && location.pathname !== '/setup') {
+              navigate('/login', { replace: true });
+            }
+          }
+        }
+      } catch (err) {
+        console.error('Init error:', err);
+      } finally {
         setLoading(false);
-      })
-      .catch(() => {
-        setLoading(false);
-      });
-  }, [navigate, location.pathname]);
+      }
+    };
+
+    init();
+  }, [navigate, location.pathname, token, isAuthenticated, logout]);
 
   if (loading) {
     return (
