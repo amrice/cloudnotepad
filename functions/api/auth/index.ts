@@ -1,10 +1,10 @@
-import { verifyToken, json, error, Response } from '../../shared/types';
+import { verifyToken, json, error } from '../../shared/types';
 
 // 认证中间件
 export async function authMiddleware(
   request: Request,
   env: Env
-): Promise<Response<null> | null> {
+): Promise<Response | null> {
   const authHeader = request.headers.get('Authorization');
 
   if (!authHeader || !authHeader.startsWith('Bearer ')) {

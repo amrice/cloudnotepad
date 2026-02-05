@@ -1,4 +1,4 @@
-import { json, error, encodeBase62 } from '../../shared/types';
+import { json, error, encodeBase62, Share } from '../../shared/types';
 
 // 获取分享列表
 export async function handleList(

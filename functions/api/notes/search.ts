@@ -1,4 +1,4 @@
-import { json, error, encodeBase62 } from '../../shared/types';
+import { json, error, NoteListItem } from '../../shared/types';
 
 // 搜索笔记
 export async function handleSearch(
@@ -15,7 +15,7 @@ export async function handleSearch(
 
     const queryLower = query.toLowerCase();
     const result = await env.KV.list({ prefix: 'note:', limit: 100 });
-    const notes: Note[] = [];
+    const notes: NoteListItem[] = [];
 
     for (const key of result.keys) {
       const data = await env.KV.get(key.name, { type: 'json' });
