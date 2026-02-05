@@ -7,4 +7,4 @@ export * from './useAuth';
 export * from './useNotes';
 export * from './useTags';
 export * from './useShares';
-export * from './useConflict';
+export * from './useSaveNote';

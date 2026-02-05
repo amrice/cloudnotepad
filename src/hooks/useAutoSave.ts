@@ -2,18 +2,17 @@ import { useEffect, useCallback, useRef } from 'react';
 import { notesApi } from '@/services/notes';
 import {
   saveNoteDraft,
-  saveNoteDraftHistory,
   getNoteDraft,
   getNoteDraftHistory,
   clearNoteDraft,
   clearNoteDraftHistory,
 } from '@/utils/storage';
 import { NOTE_CONFIG } from '@/constants';
-import * as jsonpatch from 'fast-json-patch';
 import { useDebounceCallback } from './useDebounce';
 
 interface UseAutoSaveOptions {
   noteId: string;
+  title: string;
   content: string;
   version: number;
   onSave: (newVersion: number) => void;
@@ -22,12 +21,14 @@ interface UseAutoSaveOptions {
 
 export function useAutoSave({
   noteId,
+  title,
   content,
   version,
   onSave,
   onError,
 }: UseAutoSaveOptions) {
   const lastSavedContent = useRef(content);
+  const lastSavedTitle = useRef(title);
   const lastSavedVersion = useRef(version);
   const isSaving = useRef(false);
 
@@ -37,44 +38,25 @@ export function useAutoSave({
   }, [noteId]);
 
   // 保存到云端
-  const saveToCloud = useCallback(async (currentContent: string) => {
+  const saveToCloud = useCallback(async (currentTitle: string, currentContent: string) => {
     // 新笔记不自动保存到云端
     if (noteId === 'new' || !noteId) return;
     if (isSaving.current) return;
     isSaving.current = true;
 
     try {
-      // 计算增量
-      const oldDoc = { content: lastSavedContent.current };
-      const newDoc = { content: currentContent };
-      const patch = jsonpatch.compare(oldDoc, newDoc);
+      // 使用全量更新（包含 title）
+      const result = await notesApi.update({
+        id: noteId,
+        title: currentTitle,
+        content: currentContent,
+        version: lastSavedVersion.current,
+      });
 
-      // 判断使用全量还是增量
-      let result;
-      if (patch.length > 0 && patch.length < 10) {
-        // 变更较小时使用增量
-        result = await notesApi.patch({
-          id: noteId,
-          patch: patch as { op: string; path: string; value?: unknown }[],
-          version: lastSavedVersion.current,
-        });
-      } else {
-        // 变更较大时使用全量
-        result = await notesApi.update({
-          id: noteId,
-          content: currentContent,
-          version: lastSavedVersion.current,
-        });
-      }
-
+      lastSavedTitle.current = currentTitle;
       lastSavedContent.current = currentContent;
       lastSavedVersion.current = result.version;
       onSave(result.version);
-
-      // 保存增量到历史
-      if (patch.length > 0) {
-        saveNoteDraftHistory(noteId, patch, lastSavedVersion.current - 1);
-      }
     } catch (error) {
       onError(error instanceof Error ? error : new Error('保存失败'));
     } finally {
@@ -83,18 +65,18 @@ export function useAutoSave({
   }, [noteId, onSave, onError]);
 
   // 防抖保存：停止编辑 5 秒后自动保存
-  const handleContentChange = useDebounceCallback((newContent: unknown) => {
-    const content = newContent as string;
-    saveToLocal(content);
-    saveToCloud(content);
+  const handleChange = useDebounceCallback((data: unknown) => {
+    const { title: t, content: c } = data as { title: string; content: string };
+    saveToLocal(c);
+    saveToCloud(t, c);
   }, NOTE_CONFIG.DRAFT_DEBOUNCE);
 
   // 监听内容变化
   useEffect(() => {
-    if (content !== lastSavedContent.current) {
-      handleContentChange(content);
+    if (content !== lastSavedContent.current || title !== lastSavedTitle.current) {
+      handleChange({ title, content });
     }
-  }, [content, handleContentChange]);
+  }, [title, content, handleChange]);
 
   // 恢复草稿
   const restoreDraft = useCallback(() => {
@@ -106,28 +88,11 @@ export function useAutoSave({
     return getNoteDraftHistory(noteId);
   }, [noteId]);
 
-  // 恢复历史版本
-  const restoreFromHistory = useCallback((targetVersion: number) => {
-    const history = getNoteDraftHistory(noteId);
-    const targetEntry = history.find(
-      (entry: { fromVersion: number }) => entry.fromVersion === targetVersion
-    );
-
-    if (!targetEntry) {
-      return null;
-    }
-
-    try {
-      const baseDoc = { content: lastSavedContent.current };
-      const newDoc = jsonpatch.applyPatch(
-        baseDoc,
-        targetEntry.patch as jsonpatch.Operation[]
-      ).newDocument;
-      return newDoc.content;
-    } catch {
-      return null;
-    }
-  }, [noteId]);
+  // 恢复历史版本（简化版，返回 null 表示不支持）
+  const restoreFromHistory = useCallback((_targetVersion: number) => {
+    // 历史恢复功能暂时禁用
+    return null;
+  }, []);
 
   // 清除草稿
   const clearDrafts = useCallback(() => {

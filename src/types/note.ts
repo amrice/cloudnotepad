@@ -26,6 +26,15 @@ export interface NoteListItem {
   updatedAt: string;
 }
 
+// 统一保存输入（创建或更新）
+export interface SaveNoteInput {
+  id?: string;           // 有 id 为更新，无 id 为创建
+  title: string;
+  content: string;
+  tags?: string[];
+  version?: number;      // 更新时必填
+}
+
 export interface CreateNoteInput {
   title: string;
   content: string;

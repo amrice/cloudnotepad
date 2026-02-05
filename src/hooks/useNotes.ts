@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notesApi } from '@/services/notes';
-import type { CreateNoteInput, UpdateNoteInput, PatchNoteInput } from '@/types/note';
 
 // 获取笔记列表
 export function useNotes(params?: {
@@ -21,45 +20,6 @@ export function useNote(id: string) {
     queryKey: ['note', id],
     queryFn: () => notesApi.get(id),
     enabled: !!id,
-  });
-}
-
-// 创建笔记
-export function useCreateNote() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: CreateNoteInput) => notesApi.create(data),
-    onSuccess: (newNote) => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-      queryClient.setQueryData(['note', newNote.id], newNote);
-    },
-  });
-}
-
-// 更新笔记（全量）
-export function useUpdateNote() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: UpdateNoteInput) => notesApi.update(data),
-    onSuccess: (updatedNote) => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-      queryClient.setQueryData(['note', updatedNote.id], updatedNote);
-    },
-  });
-}
-
-// 更新笔记（增量）
-export function usePatchNote() {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: (data: PatchNoteInput) => notesApi.patch(data),
-    onSuccess: (updatedNote) => {
-      queryClient.invalidateQueries({ queryKey: ['notes'] });
-      queryClient.setQueryData(['note', updatedNote.id], updatedNote);
-    },
   });
 }
 

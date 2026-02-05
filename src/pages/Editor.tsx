@@ -1,9 +1,9 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useMutation } from '@tanstack/react-query';
-import { useNote, useCreateNote } from '@/hooks/useNotes';
+import { useNote } from '@/hooks/useNotes';
 import { useAutoSave } from '@/hooks/useAutoSave';
-import { useConflictResolution } from '@/hooks/useConflict';
+import { useSaveNote } from '@/hooks/useSaveNote';
 import { useUIStore } from '@/stores/uiStore';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 import { Sidebar } from '@/components/sidebar/Sidebar';
@@ -44,6 +44,7 @@ export function Editor() {
     restoreFromHistory,
   } = useAutoSave({
     noteId: id || 'new',
+    title,
     content,
     version: note?.version || 0,
     onSave: (newVersion) => {
@@ -54,54 +55,41 @@ export function Editor() {
     },
   });
 
-  // 冲突处理
+  // 统一保存
   const {
-    isResolving,
+    save,
+    isSaving,
     conflictData,
-    saveWithConflictCheck,
     useServerVersion,
-    mergeChanges,
+    mergeSave,
     dismissConflict,
-  } = useConflictResolution({
-    noteId: id || '',
-    onConflict: () => {
-      // 冲突由 dialog 处理
-    },
-    onSaveSuccess: () => {
-      // 保存成功
+  } = useSaveNote({
+    onSuccess: (savedNote) => {
+      if (isNew) {
+        navigate(`/note/${savedNote.id}`, { replace: true });
+      }
     },
     onError: (error) => {
-      console.error('Conflict resolution error:', error);
+      console.error('Save error:', error);
+      alert('保存失败：' + error.message);
     },
   });
 
-  // 创建新笔记
-  const createMutation = useCreateNote();
-
-  const handleCreate = useCallback(() => {
+  // 保存笔记
+  const handleSave = useCallback(() => {
     if (!title && !content) {
       navigate('/');
       return;
     }
 
-    createMutation.mutate(
-      { title, content, tags: [] },
-      {
-        onSuccess: (newNote) => {
-          navigate(`/note/${newNote.id}`, { replace: true });
-        },
-      }
-    );
-  }, [title, content, navigate, createMutation]);
-
-  // 保存笔记
-  const handleSave = useCallback(() => {
-    if (isNew) {
-      handleCreate();
-    } else if (note) {
-      saveWithConflictCheck(content, note.version);
-    }
-  }, [isNew, content, note, handleCreate, saveWithConflictCheck]);
+    save({
+      id: isNew ? undefined : id,
+      title,
+      content,
+      tags: [],
+      version: note?.version,
+    });
+  }, [isNew, id, title, content, note?.version, save, navigate]);
 
   // 恢复草稿
   useEffect(() => {
@@ -148,7 +136,7 @@ export function Editor() {
           onSave={handleSave}
           onShare={() => setShowShare(true)}
           onHistory={() => setShowHistory(true)}
-          isSaving={isResolving}
+          isSaving={isSaving}
         />
 
         {/* 编辑器区域 */}
@@ -240,7 +228,7 @@ export function Editor() {
       {conflictData && (
         <ConflictDialog
           onUseServer={useServerVersion}
-          onMerge={mergeChanges}
+          onMerge={mergeSave}
           onDismiss={dismissConflict}
         />
       )}

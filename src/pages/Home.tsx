@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useNotes, useCreateNote, useDeleteNote } from '@/hooks/useNotes';
+import { useNotes, useDeleteNote } from '@/hooks/useNotes';
+import { useSaveNote } from '@/hooks/useSaveNote';
 import { useUIStore } from '@/stores/uiStore';
 import { Sidebar } from '@/components/sidebar/Sidebar';
 import { Button, Loading } from '@/components/ui';
@@ -14,22 +15,19 @@ export function Home() {
   const [search, setSearch] = useState('');
   const { sidebarOpen, toggleSidebar } = useUIStore();
   const { data, isLoading } = useNotes({ search });
-  const createMutation = useCreateNote();
+  const { save, isSaving } = useSaveNote({
+    onSuccess: (newNote) => {
+      navigate(`/note/${newNote.id}`);
+    },
+    onError: (error) => {
+      console.error('Create note error:', error);
+      alert('创建笔记失败，请重试');
+    },
+  });
   const deleteMutation = useDeleteNote();
 
   const handleCreateNote = () => {
-    createMutation.mutate(
-      { title: '', content: '' },
-      {
-        onSuccess: (newNote) => {
-          navigate(`/note/${newNote.id}`);
-        },
-        onError: (error) => {
-          console.error('Create note error:', error);
-          alert('创建笔记失败，请重试');
-        },
-      }
-    );
+    save({ title: '', content: '', tags: [] });
   };
 
   const handleDeleteNote = (e: React.MouseEvent, id: string) => {
@@ -80,7 +78,7 @@ export function Home() {
             </div>
           </div>
 
-          <Button onClick={handleCreateNote} disabled={createMutation.isPending}>
+          <Button onClick={handleCreateNote} disabled={isSaving}>
             <Plus className="w-4 h-4" />
             <span className="hidden sm:inline">新建笔记</span>
           </Button>
