@@ -63,14 +63,8 @@ function generateSharePage(title: string, content: string): string {
   </style>
 </head>
 <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 min-h-screen">
-  <header class="h-14 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between px-4 bg-white dark:bg-gray-800 sticky top-0 z-10">
-    <h1 class="font-semibold truncate max-w-[200px] sm:max-w-md">${title || '无标题笔记'}</h1>
-    <a href="/" class="flex items-center gap-1 text-sm text-primary hover:underline">
-      <span>打开云记事本</span>
-      <svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-      </svg>
-    </a>
+  <header class="h-14 border-b border-gray-200 dark:border-gray-700 flex items-center px-4 bg-white dark:bg-gray-800 sticky top-0 z-10">
+    <h1 class="font-semibold truncate">${title || '无标题笔记'}</h1>
   </header>
 
   <main class="max-w-3xl mx-auto px-4 py-8">
