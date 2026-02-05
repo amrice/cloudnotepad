@@ -1,4 +1,4 @@
-import { verifyToken, json, error, Response } from '../shared/types';
+import { verifyToken, json, error, Response } from '../../shared/types';
 
 // 认证中间件
 export async function authMiddleware(
@@ -70,7 +70,7 @@ export async function handleLogin(
     }
 
     // 验证密码
-    const storedHash = await env.KWT.get('config:password');
+    const storedHash = await env.KV.get('config:password');
     const encoder = new TextEncoder();
     const data = encoder.encode(password + env.PASSWORD_SALT);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);

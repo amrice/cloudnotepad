@@ -1,4 +1,4 @@
-import { json, error } from '../shared/types';
+import { json, error } from '../../shared/types';
 
 // 获取分享笔记（公开访问）
 export async function handleGet(
