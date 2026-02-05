@@ -1,45 +1,28 @@
+// @ts-ignore - KV 是 EdgeOne Pages 全局变量
+declare const KV: any;
+
 // 分享页面渲染
 export async function onRequest(
-  context: {
-    request: Request;
-    env: Env;
-    params: { slug: string };
-  }
+  context: { request: Request; params: { slug: string } }
 ): Promise<Response> {
-  const { request, env, params } = context;
+  const { params } = context;
   const slug = params.slug;
 
   try {
-    const share = await env.KV.get(`share:${slug}`, { type: 'json' });
-
-    if (!share) {
-      return new Response('分享不存在', { status: 404 });
-    }
-
-    // 检查是否过期
+    const share = await KV.get(`share:${slug}`, { type: 'json' });
+    if (!share) return new Response('分享不存在', { status: 404 });
     if (share.expiresAt && new Date(share.expiresAt) < new Date()) {
       return new Response('分享已过期', { status: 404 });
     }
 
-    // 获取笔记
-    const note = await env.KV.get(`note:${share.noteId}`, { type: 'json' });
+    const note = await KV.get(`note:${share.noteId}`, { type: 'json' });
+    if (!note) return new Response('笔记不存在', { status: 404 });
 
-    if (!note) {
-      return new Response('笔记不存在', { status: 404 });
-    }
-
-    // 更新访问次数
     share.visitCount = (share.visitCount || 0) + 1;
-    await env.KV.put(`share:${slug}`, JSON.stringify(share));
+    await KV.put(`share:${slug}`, JSON.stringify(share));
 
-    // 渲染分享页面
     const html = generateSharePage(note.title, note.content);
-
-    return new Response(html, {
-      headers: {
-        'Content-Type': 'text/html;charset=UTF-8',
-      },
-    });
+    return new Response(html, { headers: { 'Content-Type': 'text/html;charset=UTF-8' } });
   } catch (err) {
     console.error('Share page error:', err);
     return new Response('加载失败', { status: 500 });

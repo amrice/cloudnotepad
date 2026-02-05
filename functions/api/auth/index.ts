@@ -2,8 +2,7 @@ import { verifyToken, json, error } from '../../shared/types';
 
 // 认证中间件
 export async function authMiddleware(
-  request: Request,
-  env: Env
+  request: Request
 ): Promise<Response | null> {
   const authHeader = request.headers.get('Authorization');
 
@@ -12,7 +11,7 @@ export async function authMiddleware(
   }
 
   const token = authHeader.substring(7);
-  const jwtSecret = env.JWT_SECRET || 'cloudnotepad-jwt-secret-2024';
+  const jwtSecret = 'cloudnotepad-jwt-secret-2024';
 
   try {
     const result = await verifyToken(token, jwtSecret);
@@ -28,14 +27,12 @@ export async function authMiddleware(
 
 // 首次设置密码
 export async function handleSetup(
-  request: Request,
-  env: Env
+  request: Request
 ): Promise<Response> {
   try {
-    // 检查 KV 是否已绑定
-    if (!env.KV) {
-      console.error('KV namespace not bound');
-      return error(500, 'KV 存储未配置，请在 EdgeOne Pages 控制台绑定 KV 命名空间');
+    // @ts-ignore - KV 是 EdgeOne Pages 的全局变量
+    if (typeof KV === 'undefined') {
+      return error(500, 'KV 存储未配置');
     }
 
     const { password } = await request.json();
@@ -45,13 +42,14 @@ export async function handleSetup(
     }
 
     // 检查是否已设置过密码
-    const hasSetup = await env.KV.get('config:hasSetup');
+    // @ts-ignore
+    const hasSetup = await KV.get('config:hasSetup');
     if (hasSetup) {
       return error(400, '密码已设置，请直接登录');
     }
 
-    // 生成密码哈希（使用默认 salt 如果未配置）
-    const salt = env.PASSWORD_SALT || 'cloudnotepad-default-salt-2024';
+    // 生成密码哈希
+    const salt = 'cloudnotepad-default-salt-2024';
     const encoder = new TextEncoder();
     const data = encoder.encode(password + salt);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -59,33 +57,36 @@ export async function handleSetup(
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
 
     // 保存密码哈希
-    await env.KV.put('config:password', hashHex);
-    await env.KV.put('config:hasSetup', 'true');
+    // @ts-ignore
+    await KV.put('config:password', hashHex);
+    // @ts-ignore
+    await KV.put('config:hasSetup', 'true');
 
     return json({ success: true });
   } catch (err) {
     console.error('Setup error:', err);
-    return error(500, '设置失败');
+    return error(500, '设置失败: ' + String(err));
   }
 }
 
 // 登录
 export async function handleLogin(
-  request: Request,
-  env: Env
+  request: Request
 ): Promise<Response> {
   try {
     const { password } = await request.json();
 
     // 检查是否首次设置
-    const hasSetup = await env.KV.get('config:hasSetup');
+    // @ts-ignore
+    const hasSetup = await KV.get('config:hasSetup');
     if (!hasSetup) {
       return error(401, '请先设置密码');
     }
 
-    // 验证密码（使用默认 salt 如果未配置）
-    const salt = env.PASSWORD_SALT || 'cloudnotepad-default-salt-2024';
-    const storedHash = await env.KV.get('config:password');
+    // 验证密码
+    const salt = 'cloudnotepad-default-salt-2024';
+    // @ts-ignore
+    const storedHash = await KV.get('config:password');
     const encoder = new TextEncoder();
     const data = encoder.encode(password + salt);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
@@ -96,21 +97,16 @@ export async function handleLogin(
       return error(401, '密码错误');
     }
 
-    // 生成 token（简化版，使用默认 secret 如果未配置）
-    const jwtSecret = env.JWT_SECRET || 'cloudnotepad-jwt-secret-2024';
+    // 生成 token
+    const jwtSecret = 'cloudnotepad-jwt-secret-2024';
     const payload = {
       sub: 'user',
       iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7天
+      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
     };
-    const token = btoa(JSON.stringify(payload)) + '.' +
-      btoa(jwtSecret) + '.' +
-      'signature';
+    const token = btoa(JSON.stringify(payload)) + '.' + btoa(jwtSecret) + '.' + 'signature';
 
-    return json({
-      success: true,
-      token,
-    });
+    return json({ success: true, token });
   } catch (err) {
     console.error('Login error:', err);
     return error(500, '登录失败');
@@ -119,10 +115,9 @@ export async function handleLogin(
 
 // 验证会话
 export async function handleVerify(
-  request: Request,
-  env: Env
+  request: Request
 ): Promise<Response> {
-  const authResult = await authMiddleware(request, env);
+  const authResult = await authMiddleware(request);
   if (authResult) {
     return json({ valid: false });
   }

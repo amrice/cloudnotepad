@@ -1,10 +1,10 @@
 import { json, error, NoteListItem } from '../../shared/types';
 
+// @ts-ignore - KV 是 EdgeOne Pages 全局变量
+declare const KV: any;
+
 // 搜索笔记
-export async function handleSearch(
-  request: Request,
-  env: Env
-): Promise<Response> {
+export async function handleSearch(request: Request): Promise<Response> {
   try {
     const url = new URL(request.url);
     const query = url.searchParams.get('q');
@@ -14,17 +14,14 @@ export async function handleSearch(
     }
 
     const queryLower = query.toLowerCase();
-    const result = await env.KV.list({ prefix: 'note:', limit: 100 });
+    const result = await KV.list({ prefix: 'note:', limit: 100 });
     const notes: NoteListItem[] = [];
 
     for (const key of result.keys) {
-      const data = await env.KV.get(key.name, { type: 'json' });
-
+      const data = await KV.get(key.name, { type: 'json' });
       if (data && !data.isDeleted) {
-        const match =
-          data.title.toLowerCase().includes(queryLower) ||
+        const match = data.title.toLowerCase().includes(queryLower) ||
           data.content.toLowerCase().includes(queryLower);
-
         if (match) {
           notes.push({
             id: data.id,
@@ -37,7 +34,6 @@ export async function handleSearch(
       }
     }
 
-    // 按相关性排序
     notes.sort((a, b) => {
       const aTitle = a.title.toLowerCase().includes(queryLower) ? 1 : 0;
       const bTitle = b.title.toLowerCase().includes(queryLower) ? 1 : 0;

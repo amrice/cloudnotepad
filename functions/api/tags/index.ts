@@ -1,24 +1,18 @@
 import { json, error, Tag } from '../../shared/types';
 
+// @ts-ignore - KV 是 EdgeOne Pages 全局变量
+declare const KV: any;
+
 // 获取标签列表
-export async function handleList(
-  request: Request,
-  env: Env
-): Promise<Response> {
+export async function handleList(request: Request): Promise<Response> {
   try {
-    const result = await env.KV.list({ prefix: 'tag:', limit: 100 });
+    const result = await KV.list({ prefix: 'tag:', limit: 100 });
     const tags: Tag[] = [];
-
     for (const key of result.keys) {
-      const data = await env.KV.get(key.name, { type: 'json' });
-      if (data) {
-        tags.push(data);
-      }
+      const data = await KV.get(key.name, { type: 'json' });
+      if (data) tags.push(data);
     }
-
-    // 按名称排序
     tags.sort((a, b) => a.name.localeCompare(b.name));
-
     return json(tags);
   } catch (err) {
     console.error('List tags error:', err);
@@ -27,22 +21,17 @@ export async function handleList(
 }
 
 // 获取标签分组
-export async function handleGroups(
-  request: Request,
-  env: Env
-): Promise<Response> {
+export async function handleGroups(request: Request): Promise<Response> {
   try {
-    const result = await env.KV.list({ prefix: 'tag:', limit: 100 });
+    const result = await KV.list({ prefix: 'tag:', limit: 100 });
     const tags: Tag[] = [];
     const groups: Record<string, Tag[]> = {};
 
     for (const key of result.keys) {
-      const data = await env.KV.get(key.name, { type: 'json' });
+      const data = await KV.get(key.name, { type: 'json' });
       if (data) {
         if (data.groupId) {
-          if (!groups[data.groupId]) {
-            groups[data.groupId] = [];
-          }
+          if (!groups[data.groupId]) groups[data.groupId] = [];
           groups[data.groupId].push(data);
         } else {
           tags.push(data);
@@ -50,12 +39,11 @@ export async function handleGroups(
       }
     }
 
-    // 获取分组信息
-    const groupList = await env.KV.list({ prefix: 'tagGroup:', limit: 10 });
+    const groupList = await KV.list({ prefix: 'tagGroup:', limit: 10 });
     const resultGroups = [];
 
     for (const key of groupList.keys) {
-      const groupData = await env.KV.get(key.name, { type: 'json' });
+      const groupData = await KV.get(key.name, { type: 'json' });
       if (groupData) {
         resultGroups.push({
           id: groupData.id,
@@ -74,31 +62,22 @@ export async function handleGroups(
 }
 
 // 创建标签
-export async function handleCreate(
-  request: Request,
-  env: Env
-): Promise<Response> {
+export async function handleCreate(request: Request): Promise<Response> {
   try {
     const { name, color, groupId } = await request.json();
-
     if (!name || name.length > 50) {
       return error(400, '标签名称长度必须在 1-50 之间');
     }
-
     const id = crypto.randomUUID();
-    const now = new Date().toISOString();
-
     const tag = {
       id,
       name,
       color: color || '#3B82F6',
       groupId: groupId || null,
       noteCount: 0,
-      createdAt: now,
+      createdAt: new Date().toISOString(),
     };
-
-    await env.KV.put(`tag:${id}`, JSON.stringify(tag));
-
+    await KV.put(`tag:${id}`, JSON.stringify(tag));
     return json(tag);
   } catch (err) {
     console.error('Create tag error:', err);
@@ -107,13 +86,9 @@ export async function handleCreate(
 }
 
 // 删除标签
-export async function handleDelete(
-  request: Request,
-  env: Env,
-  id: string
-): Promise<Response> {
+export async function handleDelete(request: Request, id: string): Promise<Response> {
   try {
-    await env.KV.delete(`tag:${id}`);
+    await KV.delete(`tag:${id}`);
     return json({ success: true });
   } catch (err) {
     console.error('Delete tag error:', err);

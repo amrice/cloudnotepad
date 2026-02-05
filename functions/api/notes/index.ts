@@ -1,10 +1,10 @@
 import { json, error, NoteListItem } from '../../shared/types';
 
+// @ts-ignore - KV 是 EdgeOne Pages 全局变量
+declare const KV: any;
+
 // 获取笔记列表
-export async function handleList(
-  request: Request,
-  env: Env
-): Promise<Response> {
+export async function handleList(request: Request): Promise<Response> {
   try {
     const url = new URL(request.url);
     const page = parseInt(url.searchParams.get('page') || '1');
@@ -12,24 +12,19 @@ export async function handleList(
     const tag = url.searchParams.get('tag');
     const search = url.searchParams.get('search');
 
-    // 获取所有笔记
-    const result = await env.KV.list({ prefix: 'note:', limit: 100 });
+    const result = await KV.list({ prefix: 'note:', limit: 100 });
     const notes: NoteListItem[] = [];
 
     for (const key of result.keys) {
-      const data = await env.KV.get(key.name, { type: 'json' });
+      const data = await KV.get(key.name, { type: 'json' });
       if (data && !data.isDeleted) {
-        // 标签过滤
         if (tag && !data.tags.includes(tag)) continue;
-
-        // 搜索过滤
         if (search) {
           const searchLower = search.toLowerCase();
           const match = data.title.toLowerCase().includes(searchLower) ||
             data.content.toLowerCase().includes(searchLower);
           if (!match) continue;
         }
-
         notes.push({
           id: data.id,
           title: data.title,
@@ -40,21 +35,11 @@ export async function handleList(
       }
     }
 
-    // 排序（按更新时间倒序）
-    notes.sort((a, b) =>
-      new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime()
-    );
-
-    // 分页
+    notes.sort((a, b) => new Date(b.updatedAt).getTime() - new Date(a.updatedAt).getTime());
     const start = (page - 1) * limit;
     const paginatedNotes = notes.slice(start, start + limit);
 
-    return json({
-      notes: paginatedNotes,
-      total: notes.length,
-      page,
-      limit,
-    });
+    return json({ notes: paginatedNotes, total: notes.length, page, limit });
   } catch (err) {
     console.error('List notes error:', err);
     return error(500, '获取笔记列表失败');
@@ -62,18 +47,12 @@ export async function handleList(
 }
 
 // 获取单篇笔记
-export async function handleGet(
-  request: Request,
-  env: Env,
-  id: string
-): Promise<Response> {
+export async function handleGet(request: Request, id: string): Promise<Response> {
   try {
-    const data = await env.KV.get(`note:${id}`, { type: 'json' });
-
+    const data = await KV.get(`note:${id}`, { type: 'json' });
     if (!data || data.isDeleted) {
       return error(404, '笔记不存在');
     }
-
     return json(data);
   } catch (err) {
     console.error('Get note error:', err);
@@ -82,15 +61,10 @@ export async function handleGet(
 }
 
 // 创建笔记
-export async function handleCreate(
-  request: Request,
-  env: Env
-): Promise<Response> {
+export async function handleCreate(request: Request): Promise<Response> {
   try {
     const body = await request.json();
     const { title, content, tags = [] } = body;
-
-    // 生成 ID
     const id = crypto.randomUUID();
     const now = new Date().toISOString();
 
@@ -105,8 +79,7 @@ export async function handleCreate(
       updatedAt: now,
     };
 
-    await env.KV.put(`note:${id}`, JSON.stringify(note));
-
+    await KV.put(`note:${id}`, JSON.stringify(note));
     return json(note);
   } catch (err) {
     console.error('Create note error:', err);
@@ -114,24 +87,17 @@ export async function handleCreate(
   }
 }
 
-// 更新笔记（全量）
-export async function handleUpdate(
-  request: Request,
-  env: Env,
-  id: string
-): Promise<Response> {
+// 更新笔记
+export async function handleUpdate(request: Request, id: string): Promise<Response> {
   try {
     const body = await request.json();
     const { title, content, tags, version } = body;
 
-    // 获取现有笔记
-    const existing = await env.KV.get(`note:${id}`, { type: 'json' });
-
+    const existing = await KV.get(`note:${id}`, { type: 'json' });
     if (!existing || existing.isDeleted) {
       return error(404, '笔记不存在');
     }
 
-    // 乐观锁检查
     if (existing.version !== version) {
       return error(409, '版本冲突，请刷新后重试');
     }
@@ -145,8 +111,7 @@ export async function handleUpdate(
       updatedAt: new Date().toISOString(),
     };
 
-    await env.KV.put(`note:${id}`, JSON.stringify(updated));
-
+    await KV.put(`note:${id}`, JSON.stringify(updated));
     return json(updated);
   } catch (err) {
     console.error('Update note error:', err);
@@ -154,15 +119,10 @@ export async function handleUpdate(
   }
 }
 
-// 删除笔记（软删除）
-export async function handleDelete(
-  request: Request,
-  env: Env,
-  id: string
-): Promise<Response> {
+// 删除笔记
+export async function handleDelete(request: Request, id: string): Promise<Response> {
   try {
-    const existing = await env.KV.get(`note:${id}`, { type: 'json' });
-
+    const existing = await KV.get(`note:${id}`, { type: 'json' });
     if (!existing) {
       return error(404, '笔记不存在');
     }
@@ -173,8 +133,7 @@ export async function handleDelete(
       updatedAt: new Date().toISOString(),
     };
 
-    await env.KV.put(`note:${id}`, JSON.stringify(updated));
-
+    await KV.put(`note:${id}`, JSON.stringify(updated));
     return json({ success: true });
   } catch (err) {
     console.error('Delete note error:', err);
