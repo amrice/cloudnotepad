@@ -128,3 +128,20 @@ export async function handleVerify(
 export async function handleLogout(): Promise<Response> {
   return json({ success: true });
 }
+
+// 检查是否已设置密码
+export async function handleCheckSetup(): Promise<Response> {
+  try {
+    // @ts-ignore - KV 是 EdgeOne Pages 的全局变量
+    if (typeof KV === 'undefined') {
+      return error(500, 'KV 存储未配置');
+    }
+
+    // @ts-ignore
+    const hasSetup = await KV.get('config:hasSetup');
+    return json({ hasSetup: !!hasSetup });
+  } catch (err) {
+    console.error('Check setup error:', err);
+    return error(500, '检查设置状态失败');
+  }
+}

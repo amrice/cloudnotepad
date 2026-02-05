@@ -40,6 +40,11 @@ export async function onRequest(
     return handleLogout();
   }
 
+  if (path === '/api/auth/check-setup' && method === 'GET') {
+    const { handleCheckSetup } = await import('./auth/index.js');
+    return handleCheckSetup();
+  }
+
   // 笔记路由
   if (path === '/api/notes') {
     if (method === 'GET') {

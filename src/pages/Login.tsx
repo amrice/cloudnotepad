@@ -67,16 +67,6 @@ export function Login() {
             </Button>
           </form>
 
-          {/* 首次使用提示 */}
-          <p className="text-center text-sm text-gray-500 dark:text-gray-400 mt-6">
-            首次使用？{' '}
-            <button
-              onClick={() => navigate('/setup')}
-              className="text-primary hover:underline"
-            >
-              设置密码
-            </button>
-          </p>
         </div>
       </div>
     </div>
