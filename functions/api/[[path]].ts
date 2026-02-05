@@ -5,56 +5,69 @@ export async function onRequest(
   const { request, env } = context;
   const url = new URL(request.url);
   const path = url.pathname;
+  const method = request.method;
+
+  // CORS 预检请求
+  if (method === 'OPTIONS') {
+    return new Response(null, {
+      status: 204,
+      headers: {
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
+        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+      },
+    });
+  }
 
   // 认证路由
-  if (path === '/api/auth/setup') {
+  if (path === '/api/auth/setup' && method === 'POST') {
     const { handleSetup } = await import('./auth/index.js');
     return handleSetup(request, env);
   }
 
-  if (path === '/api/auth/login') {
+  if (path === '/api/auth/login' && method === 'POST') {
     const { handleLogin } = await import('./auth/index.js');
     return handleLogin(request, env);
   }
 
-  if (path === '/api/auth/verify') {
+  if (path === '/api/auth/verify' && method === 'POST') {
     const { handleVerify } = await import('./auth/index.js');
     return handleVerify(request, env);
   }
 
-  if (path === '/api/auth/logout') {
+  if (path === '/api/auth/logout' && method === 'POST') {
     const { handleLogout } = await import('./auth/index.js');
     return handleLogout();
   }
 
   // 笔记路由
   if (path === '/api/notes') {
-    if (request.method === 'GET') {
+    if (method === 'GET') {
       const { handleList } = await import('./notes/index.js');
       return handleList(request, env);
     }
-    if (request.method === 'POST') {
+    if (method === 'POST') {
       const { handleCreate } = await import('./notes/index.js');
       return handleCreate(request, env);
     }
   }
 
-  if (path === '/api/notes/search') {
+  if (path === '/api/notes/search' && method === 'GET') {
     const { handleSearch } = await import('./notes/search.js');
     return handleSearch(request, env);
   }
 
-  if (path.startsWith('/api/notes/')) {
+  if (path.startsWith('/api/notes/') && path !== '/api/notes/search') {
     const id = path.split('/').pop();
-    if (request.method === 'GET') {
+    if (method === 'GET') {
       const { handleGet } = await import('./notes/index.js');
       return handleGet(request, env, id);
     }
-    if (request.method === 'PUT') {
+    if (method === 'PUT') {
       const { handleUpdate } = await import('./notes/index.js');
       return handleUpdate(request, env, id);
     }
-    if (request.method === 'DELETE') {
+    if (method === 'DELETE') {
       const { handleDelete } = await import('./notes/index.js');
       return handleDelete(request, env, id);
     }
@@ -62,24 +75,24 @@ export async function onRequest(
 
   // 标签路由
   if (path === '/api/tags') {
-    if (request.method === 'GET') {
+    if (method === 'GET') {
       const { handleList } = await import('./tags/index.js');
       return handleList(request, env);
     }
-    if (request.method === 'POST') {
+    if (method === 'POST') {
       const { handleCreate } = await import('./tags/index.js');
       return handleCreate(request, env);
     }
   }
 
-  if (path === '/api/tags/groups') {
+  if (path === '/api/tags/groups' && method === 'GET') {
     const { handleGroups } = await import('./tags/index.js');
     return handleGroups(request, env);
   }
 
-  if (path.startsWith('/api/tags/')) {
+  if (path.startsWith('/api/tags/') && path !== '/api/tags/groups') {
     const id = path.split('/').pop();
-    if (request.method === 'DELETE') {
+    if (method === 'DELETE') {
       const { handleDelete } = await import('./tags/index.js');
       return handleDelete(request, env, id);
     }
@@ -87,11 +100,11 @@ export async function onRequest(
 
   // 分享路由
   if (path === '/api/shares') {
-    if (request.method === 'GET') {
+    if (method === 'GET') {
       const { handleList } = await import('./shares/index.js');
       return handleList(request, env);
     }
-    if (request.method === 'POST') {
+    if (method === 'POST') {
       const { handleCreate } = await import('./shares/index.js');
       return handleCreate(request, env);
     }
@@ -99,17 +112,20 @@ export async function onRequest(
 
   if (path.startsWith('/api/shares/')) {
     const slug = path.split('/').pop();
-    if (request.method === 'DELETE') {
+    if (method === 'DELETE') {
       const { handleDelete } = await import('./shares/index.js');
       return handleDelete(request, env, slug);
     }
   }
 
-  if (path.startsWith('/api/share/')) {
+  if (path.startsWith('/api/share/') && method === 'GET') {
     const slug = path.split('/').pop();
     const { handleGet } = await import('./shares/[slug].js');
     return handleGet(request, env, slug);
   }
 
-  return new Response('Not Found', { status: 404 });
+  return new Response(JSON.stringify({ code: 404, message: 'Not Found' }), {
+    status: 404,
+    headers: { 'Content-Type': 'application/json' },
+  });
 }

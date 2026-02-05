@@ -12,9 +12,10 @@ export async function authMiddleware(
   }
 
   const token = authHeader.substring(7);
+  const jwtSecret = env.JWT_SECRET || 'cloudnotepad-jwt-secret-2024';
 
   try {
-    const result = await verifyToken(token, env.JWT_SECRET);
+    const result = await verifyToken(token, jwtSecret);
     if (!result.valid) {
       return error(401, '登录已过期');
     }
@@ -37,9 +38,16 @@ export async function handleSetup(
       return error(400, '密码长度至少 4 位');
     }
 
-    // 生成密码哈希
+    // 检查是否已设置过密码
+    const hasSetup = await env.KV.get('config:hasSetup');
+    if (hasSetup) {
+      return error(400, '密码已设置，请直接登录');
+    }
+
+    // 生成密码哈希（使用默认 salt 如果未配置）
+    const salt = env.PASSWORD_SALT || 'cloudnotepad-default-salt-2024';
     const encoder = new TextEncoder();
-    const data = encoder.encode(password + env.PASSWORD_SALT);
+    const data = encoder.encode(password + salt);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -69,10 +77,11 @@ export async function handleLogin(
       return error(401, '请先设置密码');
     }
 
-    // 验证密码
+    // 验证密码（使用默认 salt 如果未配置）
+    const salt = env.PASSWORD_SALT || 'cloudnotepad-default-salt-2024';
     const storedHash = await env.KV.get('config:password');
     const encoder = new TextEncoder();
-    const data = encoder.encode(password + env.PASSWORD_SALT);
+    const data = encoder.encode(password + salt);
     const hashBuffer = await crypto.subtle.digest('SHA-256', data);
     const hashArray = Array.from(new Uint8Array(hashBuffer));
     const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -81,14 +90,15 @@ export async function handleLogin(
       return error(401, '密码错误');
     }
 
-    // 生成 token（简化版）
+    // 生成 token（简化版，使用默认 secret 如果未配置）
+    const jwtSecret = env.JWT_SECRET || 'cloudnotepad-jwt-secret-2024';
     const payload = {
       sub: 'user',
       iat: Math.floor(Date.now() / 1000),
       exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60, // 7天
     };
     const token = btoa(JSON.stringify(payload)) + '.' +
-      btoa(env.JWT_SECRET) + '.' +
+      btoa(jwtSecret) + '.' +
       'signature';
 
     return json({
