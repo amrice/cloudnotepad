@@ -14,22 +14,26 @@ export async function handleList(request: Request): Promise<Response> {
 
     const result = await KV.list({ prefix: 'note:', limit: 100 });
     const notes: NoteListItem[] = [];
+    const keys = result?.keys || [];
 
-    for (const key of result.keys) {
-      const data = await KV.get(key.name, { type: 'json' });
+    for (const key of keys) {
+      const keyName = typeof key === 'string' ? key : key.name;
+      if (!keyName) continue;
+
+      const data = await KV.get(keyName, { type: 'json' });
       if (data && !data.isDeleted) {
-        if (tag && !data.tags.includes(tag)) continue;
+        if (tag && !data.tags?.includes(tag)) continue;
         if (search) {
           const searchLower = search.toLowerCase();
-          const match = data.title.toLowerCase().includes(searchLower) ||
-            data.content.toLowerCase().includes(searchLower);
-          if (!match) continue;
+          const titleMatch = data.title?.toLowerCase().includes(searchLower);
+          const contentMatch = data.content?.toLowerCase().includes(searchLower);
+          if (!titleMatch && !contentMatch) continue;
         }
         notes.push({
           id: data.id,
-          title: data.title,
-          preview: data.content.slice(0, 100),
-          tags: data.tags,
+          title: data.title || '',
+          preview: (data.content || '').slice(0, 100),
+          tags: data.tags || [],
           updatedAt: data.updatedAt,
         });
       }
@@ -42,7 +46,7 @@ export async function handleList(request: Request): Promise<Response> {
     return json({ notes: paginatedNotes, total: notes.length, page, limit });
   } catch (err) {
     console.error('List notes error:', err);
-    return error(500, '获取笔记列表失败');
+    return error(500, '获取笔记列表失败: ' + String(err));
   }
 }
 

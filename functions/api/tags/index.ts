@@ -8,15 +8,20 @@ export async function handleList(request: Request): Promise<Response> {
   try {
     const result = await KV.list({ prefix: 'tag:', limit: 100 });
     const tags: Tag[] = [];
-    for (const key of result.keys) {
-      const data = await KV.get(key.name, { type: 'json' });
+    const keys = result?.keys || [];
+
+    for (const key of keys) {
+      const keyName = typeof key === 'string' ? key : key.name;
+      if (!keyName) continue;
+
+      const data = await KV.get(keyName, { type: 'json' });
       if (data) tags.push(data);
     }
-    tags.sort((a, b) => a.name.localeCompare(b.name));
+    tags.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     return json(tags);
   } catch (err) {
     console.error('List tags error:', err);
-    return error(500, '获取标签列表失败');
+    return error(500, '获取标签列表失败: ' + String(err));
   }
 }
 
@@ -26,9 +31,13 @@ export async function handleGroups(request: Request): Promise<Response> {
     const result = await KV.list({ prefix: 'tag:', limit: 100 });
     const tags: Tag[] = [];
     const groups: Record<string, Tag[]> = {};
+    const keys = result?.keys || [];
 
-    for (const key of result.keys) {
-      const data = await KV.get(key.name, { type: 'json' });
+    for (const key of keys) {
+      const keyName = typeof key === 'string' ? key : key.name;
+      if (!keyName) continue;
+
+      const data = await KV.get(keyName, { type: 'json' });
       if (data) {
         if (data.groupId) {
           if (!groups[data.groupId]) groups[data.groupId] = [];
@@ -41,15 +50,19 @@ export async function handleGroups(request: Request): Promise<Response> {
 
     const groupList = await KV.list({ prefix: 'tagGroup:', limit: 10 });
     const resultGroups = [];
+    const groupKeys = groupList?.keys || [];
 
-    for (const key of groupList.keys) {
-      const groupData = await KV.get(key.name, { type: 'json' });
+    for (const key of groupKeys) {
+      const keyName = typeof key === 'string' ? key : key.name;
+      if (!keyName) continue;
+
+      const groupData = await KV.get(keyName, { type: 'json' });
       if (groupData) {
         resultGroups.push({
           id: groupData.id,
           name: groupData.name,
           children: groups[groupData.id] || [],
-          noteCount: (groups[groupData.id] || []).reduce((sum: number, t: Tag) => sum + t.noteCount, 0),
+          noteCount: (groups[groupData.id] || []).reduce((sum: number, t: Tag) => sum + (t.noteCount || 0), 0),
         });
       }
     }

@@ -8,8 +8,13 @@ export async function handleList(request: Request): Promise<Response> {
   try {
     const result = await KV.list({ prefix: 'share:', limit: 100 });
     const shares: Share[] = [];
-    for (const key of result.keys) {
-      const data = await KV.get(key.name, { type: 'json' });
+    const keys = result?.keys || [];
+
+    for (const key of keys) {
+      const keyName = typeof key === 'string' ? key : key.name;
+      if (!keyName) continue;
+
+      const data = await KV.get(keyName, { type: 'json' });
       if (data && !(data.expiresAt && new Date(data.expiresAt) < new Date())) {
         shares.push(data);
       }
@@ -18,7 +23,7 @@ export async function handleList(request: Request): Promise<Response> {
     return json({ shares, total: shares.length });
   } catch (err) {
     console.error('List shares error:', err);
-    return error(500, '获取分享列表失败');
+    return error(500, '获取分享列表失败: ' + String(err));
   }
 }
 
@@ -30,7 +35,8 @@ export async function handleCreate(request: Request): Promise<Response> {
     if (!note) return error(404, '笔记不存在');
 
     const shareList = await KV.list({ prefix: 'share:', limit: 100 });
-    if (shareList.keys.length >= 50) return error(400, '分享数量已达上限');
+    const shareKeys = shareList?.keys || [];
+    if (shareKeys.length >= 50) return error(400, '分享数量已达上限');
 
     const slug = customAlias || encodeBase62(Date.now() + Math.floor(Math.random() * 10000));
     let expiresAt: string | undefined;
