@@ -123,6 +123,40 @@ export async function handleUpdate(request: Request, id: string): Promise<Respon
   }
 }
 
+// 增量更新笔记
+export async function handlePatch(request: Request, id: string): Promise<Response> {
+  try {
+    const body = await request.json();
+    const { patch, version } = body;
+
+    const existing = await KV.get(`note:${id}`, { type: 'json' });
+    if (!existing || existing.isDeleted) {
+      return error(404, '笔记不存在');
+    }
+
+    if (existing.version !== version) {
+      return error(409, '版本冲突，请刷新后重试');
+    }
+
+    // 应用 JSON Patch
+    let updated = { ...existing };
+    for (const op of patch) {
+      if (op.op === 'replace' && op.path === '/content') {
+        updated.content = op.value;
+      }
+    }
+
+    updated.version = existing.version + 1;
+    updated.updatedAt = new Date().toISOString();
+
+    await KV.put(`note:${id}`, JSON.stringify(updated));
+    return json(updated);
+  } catch (err) {
+    console.error('Patch note error:', err);
+    return error(500, '增量更新笔记失败');
+  }
+}
+
 // 删除笔记
 export async function handleDelete(request: Request, id: string): Promise<Response> {
   try {

@@ -67,3 +67,46 @@ export async function handleDelete(request: Request, slug: string): Promise<Resp
     return error(500, '删除分享失败');
   }
 }
+
+// 更新分享
+export async function handleUpdate(request: Request, slug: string): Promise<Response> {
+  try {
+    const { expiresInDays } = await request.json();
+    const existing = await KV.get(`share:${slug}`, { type: 'json' });
+    if (!existing) return error(404, '分享不存在');
+
+    let expiresAt: string | undefined = existing.expiresAt;
+    if (expiresInDays !== undefined) {
+      if (expiresInDays > 0) {
+        const expires = new Date();
+        expires.setDate(expires.getDate() + expiresInDays);
+        expiresAt = expires.toISOString();
+      } else {
+        expiresAt = undefined;
+      }
+    }
+
+    const updated = { ...existing, expiresAt };
+    await KV.put(`share:${slug}`, JSON.stringify(updated));
+    return json({ success: true });
+  } catch (err) {
+    console.error('Update share error:', err);
+    return error(500, '更新分享失败');
+  }
+}
+
+// 获取分享统计
+export async function handleStats(request: Request, slug: string): Promise<Response> {
+  try {
+    const share = await KV.get(`share:${slug}`, { type: 'json' });
+    if (!share) return error(404, '分享不存在');
+
+    return json({
+      visitCount: share.visitCount || 0,
+      createdAt: share.createdAt,
+    });
+  } catch (err) {
+    console.error('Get share stats error:', err);
+    return error(500, '获取分享统计失败');
+  }
+}

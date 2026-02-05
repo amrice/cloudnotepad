@@ -30,6 +30,7 @@ export async function onRequest(
 }
 
 function generateSharePage(title: string, content: string): string {
+  const htmlContent = markdownToHtml(content || '');
   return `<!DOCTYPE html>
 <html lang="zh-CN">
 <head>
@@ -74,63 +75,64 @@ function generateSharePage(title: string, content: string): string {
 
   <main class="max-w-3xl mx-auto px-4 py-8">
     <article class="prose dark:prose-invert">
-      ${markdownToHtml(content)}
+      ${htmlContent}
     </article>
 
     <footer class="mt-8 pt-4 border-t border-gray-200 dark:border-gray-700 text-center text-sm text-gray-500">
       <p>来自云记事本</p>
     </footer>
   </main>
-
-  <script>
-    // Markdown 转 HTML（简化版）
-    function markdownToHtml(md) {
-      let html = md || '';
-
-      // 代码块
-      html = html.replace(/\`\`\`([\s\S]*?)\`\`\`/g, '<pre><code>$1</code></pre>');
-
-      // 行内代码
-      html = html.replace(/\`([^\`]+)\`/g, '<code>$1</code>');
-
-      // 粗体
-      html = html.replace(/\*\*([^\*]+)\*\*/g, '<strong>$1</strong>');
-      html = html.replace(/\_\_([^\_]+)\_\_/g, '<strong>$1</strong>');
-
-      // 斜体
-      html = html.replace(/\*([^\*]+)\*/g, '<em>$1</em>');
-      html = html.replace(/\_([^\_]+)\_/g, '<em>$1</em>');
-
-      // 删除线
-      html = html.replace(/\~\~([^\~]+)\~\~/g, '<del>$1</del>');
-
-      // 标题
-      html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
-      html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
-      html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
-
-      // 引用
-      html = html.replace(/^\> (.*$)/gim, '<blockquote>$1</blockquote>');
-
-      // 无序列表
-      html = html.replace(/^\- (.*$)/gim, '<li>$1</li>');
-      html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
-
-      // 有序列表
-      html = html.replace(/^\d+\. (.*$)/gim, '<li>$1</li>');
-
-      // 链接
-      html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
-
-      // 图片
-      html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />');
-
-      // 段落
-      html = html.replace(/\n\n/g, '</p><p>');
-
-      return '<p>' + html + '</p>';
-    }
-  </script>
 </body>
 </html>`;
+}
+
+// 服务端 Markdown 转 HTML
+function markdownToHtml(md: string): string {
+  let html = md || '';
+
+  // 转义 HTML 特殊字符
+  html = html.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  // 代码块
+  html = html.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+
+  // 行内代码
+  html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+
+  // 粗体
+  html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  html = html.replace(/__([^_]+)__/g, '<strong>$1</strong>');
+
+  // 斜体
+  html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+  html = html.replace(/_([^_]+)_/g, '<em>$1</em>');
+
+  // 删除线
+  html = html.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+
+  // 标题
+  html = html.replace(/^### (.*$)/gim, '<h3>$1</h3>');
+  html = html.replace(/^## (.*$)/gim, '<h2>$1</h2>');
+  html = html.replace(/^# (.*$)/gim, '<h1>$1</h1>');
+
+  // 引用
+  html = html.replace(/^> (.*$)/gim, '<blockquote>$1</blockquote>');
+
+  // 无序列表
+  html = html.replace(/^- (.*$)/gim, '<li>$1</li>');
+  html = html.replace(/^\* (.*$)/gim, '<li>$1</li>');
+
+  // 有序列表
+  html = html.replace(/^\d+\. (.*$)/gim, '<li>$1</li>');
+
+  // 链接
+  html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+
+  // 图片
+  html = html.replace(/!\[([^\]]*)\]\(([^)]+)\)/g, '<img src="$2" alt="$1" />');
+
+  // 段落
+  html = html.replace(/\n\n/g, '</p><p>');
+
+  return '<p>' + html + '</p>';
 }

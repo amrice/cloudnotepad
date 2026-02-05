@@ -16,18 +16,22 @@ export async function handleSearch(request: Request): Promise<Response> {
     const queryLower = query.toLowerCase();
     const result = await KV.list({ prefix: 'note:', limit: 100 });
     const notes: NoteListItem[] = [];
+    const keys = result?.keys || [];
 
-    for (const key of result.keys) {
-      const data = await KV.get(key.name, { type: 'json' });
+    for (const key of keys) {
+      const keyName = typeof key === 'string' ? key : key.name;
+      if (!keyName) continue;
+
+      const data = await KV.get(keyName, { type: 'json' });
       if (data && !data.isDeleted) {
-        const match = data.title.toLowerCase().includes(queryLower) ||
-          data.content.toLowerCase().includes(queryLower);
-        if (match) {
+        const titleMatch = data.title?.toLowerCase().includes(queryLower);
+        const contentMatch = data.content?.toLowerCase().includes(queryLower);
+        if (titleMatch || contentMatch) {
           notes.push({
             id: data.id,
-            title: data.title,
-            preview: data.content.slice(0, 100),
-            tags: data.tags,
+            title: data.title || '',
+            preview: (data.content || '').slice(0, 100),
+            tags: data.tags || [],
             updatedAt: data.updatedAt,
           });
         }

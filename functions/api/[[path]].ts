@@ -62,7 +62,15 @@ export async function onRequest(
     return handleSearch(request);
   }
 
-  if (path.startsWith('/api/notes/') && path !== '/api/notes/search') {
+  // 笔记增量更新
+  if (path.match(/^\/api\/notes\/[^/]+\/patch$/) && method === 'POST') {
+    const parts = path.split('/');
+    const id = parts[3];
+    const { handlePatch } = await import('./notes/index.js');
+    return handlePatch(request, id);
+  }
+
+  if (path.startsWith('/api/notes/') && path !== '/api/notes/search' && !path.endsWith('/patch')) {
     const id = path.split('/').pop();
     if (method === 'GET') {
       const { handleGet } = await import('./notes/index.js');
@@ -90,13 +98,47 @@ export async function onRequest(
     }
   }
 
-  if (path === '/api/tags/groups' && method === 'GET') {
-    const { handleGroups } = await import('./tags/index.js');
-    return handleGroups(request);
+  if (path === '/api/tags/groups') {
+    if (method === 'GET') {
+      const { handleGroups } = await import('./tags/index.js');
+      return handleGroups(request);
+    }
+    if (method === 'POST') {
+      const { handleCreateGroup } = await import('./tags/index.js');
+      return handleCreateGroup(request);
+    }
   }
 
-  if (path.startsWith('/api/tags/') && path !== '/api/tags/groups') {
+  if (path === '/api/tags/move' && method === 'POST') {
+    const { handleMove } = await import('./tags/index.js');
+    return handleMove(request);
+  }
+
+  if (path === '/api/tags/merge' && method === 'POST') {
+    const { handleMerge } = await import('./tags/index.js');
+    return handleMerge(request);
+  }
+
+  // 标签分组操作
+  if (path.match(/^\/api\/tags\/groups\/[^/]+$/) && path !== '/api/tags/groups') {
     const id = path.split('/').pop();
+    if (method === 'PUT') {
+      const { handleUpdateGroup } = await import('./tags/index.js');
+      return handleUpdateGroup(request, id);
+    }
+    if (method === 'DELETE') {
+      const { handleDeleteGroup } = await import('./tags/index.js');
+      return handleDeleteGroup(request, id);
+    }
+  }
+
+  // 单个标签操作
+  if (path.match(/^\/api\/tags\/[^/]+$/) && !path.includes('/groups') && path !== '/api/tags/move' && path !== '/api/tags/merge') {
+    const id = path.split('/').pop();
+    if (method === 'PUT') {
+      const { handleUpdate } = await import('./tags/index.js');
+      return handleUpdate(request, id);
+    }
     if (method === 'DELETE') {
       const { handleDelete } = await import('./tags/index.js');
       return handleDelete(request, id);
@@ -115,8 +157,21 @@ export async function onRequest(
     }
   }
 
-  if (path.startsWith('/api/shares/')) {
+  // 分享统计
+  if (path.match(/^\/api\/shares\/[^/]+\/stats$/) && method === 'GET') {
+    const parts = path.split('/');
+    const slug = parts[3];
+    const { handleStats } = await import('./shares/index.js');
+    return handleStats(request, slug);
+  }
+
+  // 单个分享操作
+  if (path.match(/^\/api\/shares\/[^/]+$/) && !path.endsWith('/stats')) {
     const slug = path.split('/').pop();
+    if (method === 'PUT') {
+      const { handleUpdate } = await import('./shares/index.js');
+      return handleUpdate(request, slug);
+    }
     if (method === 'DELETE') {
       const { handleDelete } = await import('./shares/index.js');
       return handleDelete(request, slug);

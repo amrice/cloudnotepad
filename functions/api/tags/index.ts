@@ -98,6 +98,29 @@ export async function handleCreate(request: Request): Promise<Response> {
   }
 }
 
+// 更新标签
+export async function handleUpdate(request: Request, id: string): Promise<Response> {
+  try {
+    const { name, color, groupId } = await request.json();
+    const existing = await KV.get(`tag:${id}`, { type: 'json' });
+    if (!existing) {
+      return error(404, '标签不存在');
+    }
+
+    const updated = {
+      ...existing,
+      name: name ?? existing.name,
+      color: color ?? existing.color,
+      groupId: groupId !== undefined ? groupId : existing.groupId,
+    };
+    await KV.put(`tag:${id}`, JSON.stringify(updated));
+    return json(updated);
+  } catch (err) {
+    console.error('Update tag error:', err);
+    return error(500, '更新标签失败');
+  }
+}
+
 // 删除标签
 export async function handleDelete(request: Request, id: string): Promise<Response> {
   try {
@@ -106,5 +129,89 @@ export async function handleDelete(request: Request, id: string): Promise<Respon
   } catch (err) {
     console.error('Delete tag error:', err);
     return error(500, '删除标签失败');
+  }
+}
+
+// 移动标签到分组
+export async function handleMove(request: Request): Promise<Response> {
+  try {
+    const { tagId, groupId } = await request.json();
+    const existing = await KV.get(`tag:${tagId}`, { type: 'json' });
+    if (!existing) {
+      return error(404, '标签不存在');
+    }
+
+    const updated = { ...existing, groupId: groupId || null };
+    await KV.put(`tag:${tagId}`, JSON.stringify(updated));
+    return json({ success: true });
+  } catch (err) {
+    console.error('Move tag error:', err);
+    return error(500, '移动标签失败');
+  }
+}
+
+// 合并标签
+export async function handleMerge(request: Request): Promise<Response> {
+  try {
+    const { sourceIds, targetId } = await request.json();
+    const target = await KV.get(`tag:${targetId}`, { type: 'json' });
+    if (!target) {
+      return error(404, '目标标签不存在');
+    }
+
+    // 删除源标签
+    for (const sourceId of sourceIds) {
+      await KV.delete(`tag:${sourceId}`);
+    }
+    return json({ success: true });
+  } catch (err) {
+    console.error('Merge tags error:', err);
+    return error(500, '合并标签失败');
+  }
+}
+
+// 创建分组
+export async function handleCreateGroup(request: Request): Promise<Response> {
+  try {
+    const { name } = await request.json();
+    if (!name || name.length > 50) {
+      return error(400, '分组名称长度必须在 1-50 之间');
+    }
+    const id = crypto.randomUUID();
+    const group = { id, name, createdAt: new Date().toISOString() };
+    await KV.put(`tagGroup:${id}`, JSON.stringify(group));
+    return json(group);
+  } catch (err) {
+    console.error('Create group error:', err);
+    return error(500, '创建分组失败');
+  }
+}
+
+// 更新分组
+export async function handleUpdateGroup(request: Request, id: string): Promise<Response> {
+  try {
+    const { name } = await request.json();
+    const existing = await KV.get(`tagGroup:${id}`, { type: 'json' });
+    if (!existing) {
+      return error(404, '分组不存在');
+    }
+
+    const updated = { ...existing, name: name ?? existing.name };
+    await KV.put(`tagGroup:${id}`, JSON.stringify(updated));
+    return json(updated);
+  } catch (err) {
+    console.error('Update group error:', err);
+    return error(500, '更新分组失败');
+  }
+}
+
+// 删除分组
+export async function handleDeleteGroup(request: Request, id: string): Promise<Response> {
+  try {
+    await KV.delete(`tagGroup:${id}`);
+    return json({ success: true });
+  } catch (err) {
+    console.error('Delete group error:', err);
+    return error(500, '删除分组失败');
   }
 }
