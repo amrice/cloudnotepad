@@ -69,7 +69,8 @@ export async function verifyToken(
     const parts = token.split('.');
     if (parts.length !== 3) return { valid: false };
 
-    const payload = JSON.parse(atob(parts[1]));
+    // payload 在第一部分（简化 JWT 格式）
+    const payload = JSON.parse(atob(parts[0]));
     if (payload.exp && payload.exp < Date.now() / 1000) {
       return { valid: false };
     }
