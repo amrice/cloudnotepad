@@ -38,6 +38,8 @@ export function useAutoSave({
 
   // 保存到云端
   const saveToCloud = useCallback(async (currentContent: string) => {
+    // 新笔记不自动保存到云端
+    if (noteId === 'new' || !noteId) return;
     if (isSaving.current) return;
     isSaving.current = true;
 

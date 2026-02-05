@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { notesApi } from '@/services/notes';
 import type { Note } from '@/types/note';
 
@@ -15,6 +16,7 @@ export function useConflictResolution({
   onSaveSuccess,
   onError,
 }: ConflictResolutionOptions) {
+  const queryClient = useQueryClient();
   const [isResolving, setIsResolving] = useState(false);
   const [conflictData, setConflictData] = useState<{
     serverNote: Note;
@@ -27,11 +29,14 @@ export function useConflictResolution({
       setIsResolving(true);
 
       try {
-        await notesApi.update({
+        const updatedNote = await notesApi.update({
           id: noteId,
           content: localContent,
           version: localVersion,
         });
+        // 更新缓存
+        queryClient.setQueryData(['note', noteId], updatedNote);
+        queryClient.invalidateQueries({ queryKey: ['notes'] });
         onSaveSuccess();
       } catch (error: any) {
         if (error.message?.includes('version') || error.message?.includes('conflict')) {
@@ -63,17 +68,20 @@ export function useConflictResolution({
     const mergedContent = `=== 对方最新修改 ===\n\n${conflictData.serverNote.content}\n\n=== 我的修改 ===\n\n${conflictData.localContent}`;
 
     try {
-      await notesApi.update({
+      const updatedNote = await notesApi.update({
         id: noteId,
         content: mergedContent,
         version: conflictData.serverNote.version,
       });
+      // 更新缓存
+      queryClient.setQueryData(['note', noteId], updatedNote);
+      queryClient.invalidateQueries({ queryKey: ['notes'] });
       onSaveSuccess();
       setConflictData(null);
     } catch (error) {
       onError(error instanceof Error ? error : new Error('合并失败'));
     }
-  }, [conflictData, noteId, onSaveSuccess, onError]);
+  }, [conflictData, noteId, onSaveSuccess, onError, queryClient]);
 
   // 关闭冲突弹窗
   const dismissConflict = useCallback(() => {
