@@ -32,6 +32,12 @@ export async function handleSetup(
   env: Env
 ): Promise<Response> {
   try {
+    // 检查 KV 是否已绑定
+    if (!env.KV) {
+      console.error('KV namespace not bound');
+      return error(500, 'KV 存储未配置，请在 EdgeOne Pages 控制台绑定 KV 命名空间');
+    }
+
     const { password } = await request.json();
 
     if (!password || password.length < 4) {
