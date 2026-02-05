@@ -53,6 +53,30 @@ export function Toolbar({
   showPreview = false,
   className,
 }: ToolbarProps) {
+  if (!editor) {
+    return (
+      <div
+        className={cn(
+          'flex items-center gap-1 px-3 py-2',
+          'border-t border-gray-200 dark:border-gray-700',
+          'bg-gray-50 dark:bg-gray-900/50',
+          className
+        )}
+      >
+        <div className="flex-1" />
+        {onPreviewToggle && (
+          <button
+            type="button"
+            onClick={onPreviewToggle}
+            className="p-2 rounded hover:bg-gray-200 dark:hover:bg-gray-700"
+          >
+            {showPreview ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        )}
+      </div>
+    );
+  }
+
   return (
     <div
       className={cn(
