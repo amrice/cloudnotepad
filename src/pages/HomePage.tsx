@@ -159,39 +159,55 @@ export function HomePage() {
               </button>
 
               {showSettings && (
-                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                   {/* 主题选项 */}
                   <div className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">主题</div>
-                  <button
-                    onClick={() => { setTheme('light'); setShowSettings(false); }}
-                    className={cn(
-                      "w-full px-4 py-2 text-left text-sm flex items-center gap-2",
-                      theme === 'light' ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    )}
-                  >
-                    <Sun className="w-4 h-4" />
-                    浅色模式
-                  </button>
-                  <button
-                    onClick={() => { setTheme('dark'); setShowSettings(false); }}
-                    className={cn(
-                      "w-full px-4 py-2 text-left text-sm flex items-center gap-2",
-                      theme === 'dark' ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    )}
-                  >
-                    <Moon className="w-4 h-4" />
-                    深色模式
-                  </button>
-                  <button
-                    onClick={() => { setTheme('system'); setShowSettings(false); }}
-                    className={cn(
-                      "w-full px-4 py-2 text-left text-sm flex items-center gap-2",
-                      theme === 'system' ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
-                    )}
-                  >
-                    <Monitor className="w-4 h-4" />
-                    跟随系统
-                  </button>
+                  {/* 深色模式开关 */}
+                  <div className="px-4 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      {theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) ? (
+                        <Moon className="w-4 h-4" />
+                      ) : (
+                        <Sun className="w-4 h-4" />
+                      )}
+                      <span>深色模式</span>
+                    </div>
+                    <button
+                      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                      className={cn(
+                        "relative w-11 h-6 rounded-full transition-colors duration-300",
+                        theme === 'dark' ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300",
+                          theme === 'dark' ? "translate-x-5" : "translate-x-0"
+                        )}
+                      />
+                    </button>
+                  </div>
+                  {/* 跟随系统开关 */}
+                  <div className="px-4 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      <Monitor className="w-4 h-4" />
+                      <span>跟随系统</span>
+                    </div>
+                    <button
+                      onClick={() => setTheme(theme === 'system' ? 'light' : 'system')}
+                      className={cn(
+                        "relative w-11 h-6 rounded-full transition-colors duration-300",
+                        theme === 'system' ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300",
+                          theme === 'system' ? "translate-x-5" : "translate-x-0"
+                        )}
+                      />
+                    </button>
+                  </div>
                   <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
                   <button
                     onClick={() => {
