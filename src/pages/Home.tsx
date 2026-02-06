@@ -6,7 +6,7 @@ import { useUIStore } from '@/stores/uiStore';
 import { Sidebar } from '@/components/sidebar/Sidebar';
 import { Button, Loading } from '@/components/ui';
 import { formatRelativeTime } from '@/utils/date';
-import { FileText, Plus, Trash2, Search } from 'lucide-react';
+import { FileText, Plus, Trash2, Search, Menu } from 'lucide-react';
 import { cn } from '@/utils/helpers';
 import type { NoteListItem } from '@/types/note';
 
@@ -56,6 +56,14 @@ export function Home() {
             'bg-white dark:bg-gray-800'
           )}
         >
+          {/* 移动端菜单按钮 */}
+          <button
+            onClick={toggleSidebar}
+            className="lg:hidden p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+          >
+            <Menu className="w-5 h-5" />
+          </button>
+
           <h1 className="text-lg font-semibold">我的笔记</h1>
 
           <div className="flex-1 max-w-md ml-auto">

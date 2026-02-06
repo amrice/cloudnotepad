@@ -19,6 +19,7 @@ import {
   Check,
   X,
   RotateCcw,
+  Menu,
 } from 'lucide-react';
 
 export function Editor() {
@@ -136,6 +137,7 @@ export function Editor() {
           onSave={handleSave}
           onShare={() => setShowShare(true)}
           onHistory={() => setShowHistory(true)}
+          onToggleSidebar={toggleSidebar}
           isSaving={isSaving}
         />
 
@@ -244,6 +246,7 @@ interface EditorHeaderProps {
   onSave: () => void;
   onShare: () => void;
   onHistory: () => void;
+  onToggleSidebar: () => void;
   isSaving: boolean;
 }
 
@@ -254,6 +257,7 @@ function EditorHeader({
   onSave,
   onShare,
   onHistory,
+  onToggleSidebar,
   isSaving,
 }: EditorHeaderProps) {
   return (
@@ -264,6 +268,14 @@ function EditorHeader({
         'bg-white dark:bg-gray-800'
       )}
     >
+      {/* 移动端菜单按钮 */}
+      <button
+        onClick={onToggleSidebar}
+        className="lg:hidden p-2 -ml-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg"
+      >
+        <Menu className="w-5 h-5" />
+      </button>
+
       <button
         onClick={onBack}
         className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"

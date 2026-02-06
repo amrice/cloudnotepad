@@ -18,7 +18,7 @@ interface UIStore {
 export const useUIStore = create<UIStore>()(
   persist(
     (set) => ({
-      sidebarOpen: true,
+      sidebarOpen: false,
       theme: 'system',
       editorMode: 'edit',
       sidebarCollapsed: false,
