@@ -176,6 +176,18 @@ body {
   min-height: 0 !important;
 }
 
+/* 编辑区宽度 60% */
+.md-editor-wrapper .w-md-editor-area {
+  flex: 3 !important;
+  max-width: 60% !important;
+}
+
+/* 预览区宽度 40% */
+.md-editor-wrapper .w-md-editor-preview {
+  flex: 2 !important;
+  max-width: 40% !important;
+}
+
 .dark .md-editor-wrapper .w-md-editor-content {
   background-color: transparent !important;
 }
