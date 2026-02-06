@@ -105,7 +105,8 @@ export function EditorPage() {
         // 新笔记：创建
         savedNote = await notesApi.create({ title, content, tags: [] });
         setNoteId(savedNote.id);
-        navigate(`/note/${savedNote.id}`, { replace: true });
+        // 静默更新 URL，不触发路由重新渲染
+        window.history.replaceState(null, '', `/note/${savedNote.id}`);
       } else if (isFullSave) {
         // 手动保存：全量
         savedNote = await notesApi.update({ id: noteId!, title, content, version });
