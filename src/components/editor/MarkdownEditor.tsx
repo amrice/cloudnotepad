@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import MDEditor, { commands } from '@uiw/react-md-editor';
 import { useTheme } from '@/hooks';
 import { cn } from '@/utils/helpers';
-import { ChevronDown, ChevronUp } from 'lucide-react';
+import { ChevronDown, ChevronUp, Upload } from 'lucide-react';
+import { ImageUploader } from './ImageUploader';
 
 interface MarkdownEditorProps {
   content: string;
@@ -22,7 +23,24 @@ export function MarkdownEditor({
   const { theme } = useTheme();
   const [toolbarExpanded, setToolbarExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showImageUploader, setShowImageUploader] = useState(false);
   const colorMode = theme === 'dark' ? 'dark' : 'light';
+
+  // 图片上传成功回调
+  const handleImageUpload = (url: string) => {
+    const imageMarkdown = `![image](${url})`;
+    onChange(content + '\n' + imageMarkdown);
+    setShowImageUploader(false);
+  };
+
+  // 自定义图片上传命令
+  const uploadImageCommand = {
+    name: 'upload-image',
+    keyCommand: 'upload-image',
+    buttonProps: { 'aria-label': '上传图片' },
+    icon: <Upload className="w-3 h-3" />,
+    execute: () => setShowImageUploader(true),
+  };
 
   // 检测是否为移动端
   useEffect(() => {
@@ -72,6 +90,7 @@ export function MarkdownEditor({
     commands.divider,
     commands.link,
     commands.image,
+    uploadImageCommand,
     commands.divider,
     commands.unorderedListCommand,
     commands.orderedListCommand,
@@ -138,6 +157,14 @@ export function MarkdownEditor({
           placeholder,
         }}
       />
+
+      {/* 图片上传弹窗 */}
+      {showImageUploader && (
+        <ImageUploader
+          onUpload={handleImageUpload}
+          onClose={() => setShowImageUploader(false)}
+        />
+      )}
     </div>
   );
 }

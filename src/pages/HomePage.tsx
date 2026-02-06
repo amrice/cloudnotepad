@@ -13,6 +13,7 @@ import { useTheme } from '@/hooks';
 import { useAuthStore } from '@/stores/authStore';
 import { useNoteListStore } from '@/stores/noteListStore';
 import { ChangePasswordDialog } from '@/components/ChangePasswordDialog';
+import { AdminPanel } from '@/components/AdminPanel';
 import { toast } from '@/stores/toastStore';
 import { authApi } from '@/services/auth';
 
@@ -22,6 +23,7 @@ export function HomePage() {
   const [search, setSearch] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showAdminPanel, setShowAdminPanel] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetPassword, setResetPassword] = useState('');
   const [resetLoading, setResetLoading] = useState(false);
@@ -207,6 +209,17 @@ export function HomePage() {
                     </div>
                   )}
                   <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                  <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                  <button
+                    onClick={() => {
+                      setShowAdminPanel(true);
+                      setShowSettings(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                  >
+                    <Settings className="w-4 h-4" />
+                    管理面板
+                  </button>
                   <button
                     onClick={() => {
                       setShowChangePassword(true);
@@ -369,6 +382,12 @@ export function HomePage() {
       <ChangePasswordDialog
         open={showChangePassword}
         onClose={() => setShowChangePassword(false)}
+      />
+
+      {/* 管理面板 */}
+      <AdminPanel
+        open={showAdminPanel}
+        onClose={() => setShowAdminPanel(false)}
       />
 
       {/* 删除确认弹窗 */}
