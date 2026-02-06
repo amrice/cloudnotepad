@@ -130,6 +130,12 @@ body {
   background-color: #F8FAFC !important;
   padding: 6px 8px !important;
   min-height: 40px !important;
+  height: auto !important;
+  flex-wrap: wrap !important;
+}
+
+.md-editor-wrapper .w-md-editor-toolbar ul {
+  flex-wrap: wrap !important;
 }
 
 .dark .md-editor-wrapper .w-md-editor-toolbar {
