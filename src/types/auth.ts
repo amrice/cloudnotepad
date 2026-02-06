@@ -4,24 +4,33 @@ export interface User {
   createdAt: string;
 }
 
+// 登录时长选项
+export type LoginDuration = 'session' | '7days' | '30days';
+
 export interface LoginResponse {
   success: boolean;
-  token?: string;
   message?: string;
 }
 
 export interface AuthState {
   isAuthenticated: boolean;
   isLoading: boolean;
-  user: User | null;
+  hasSetup: boolean;
 }
 
 export interface LoginInput {
   password: string;
+  duration: LoginDuration;
 }
 
 export interface SetupInput {
   password: string;
+  confirmPassword: string;
+}
+
+export interface ChangePasswordInput {
+  oldPassword: string;
+  newPassword: string;
   confirmPassword: string;
 }
 

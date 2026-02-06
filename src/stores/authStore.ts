@@ -1,27 +1,45 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
-import { STORAGE_KEYS } from '@/constants';
+import { authApi } from '@/services/auth';
 
 interface AuthState {
-  token: string | null;
-  setToken: (token: string | null) => void;
-  logout: () => void;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  hasSetup: boolean;
+  checkAuth: () => Promise<void>;
+  logout: () => Promise<void>;
 }
 
-export const useAuthStore = create<AuthState>()(
-  persist(
-    (set) => ({
-      token: null,
-      setToken: (token) => set({ token }),
-      logout: () => set({ token: null }),
-    }),
-    {
-      name: STORAGE_KEYS.AUTH_TOKEN,
+export const useAuthStore = create<AuthState>((set) => ({
+  isAuthenticated: false,
+  isLoading: true,
+  hasSetup: false,
+
+  checkAuth: async () => {
+    set({ isLoading: true });
+    try {
+      const setupResult = await authApi.checkSetup();
+      if (!setupResult.hasSetup) {
+        set({ isAuthenticated: false, hasSetup: false, isLoading: false });
+        return;
+      }
+
+      const verifyResult = await authApi.verify();
+      set({
+        isAuthenticated: verifyResult.valid,
+        hasSetup: true,
+        isLoading: false,
+      });
+    } catch {
+      set({ isAuthenticated: false, isLoading: false });
     }
-  )
-);
+  },
 
-// 获取 token 的辅助函数
-export function getAuthToken(): string | null {
-  return useAuthStore.getState().token;
-}
+  logout: async () => {
+    try {
+      await authApi.logout();
+    } finally {
+      set({ isAuthenticated: false });
+      window.location.href = '/login';
+    }
+  },
+}));

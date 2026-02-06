@@ -1,28 +1,37 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notesApi } from '@/services/notes';
 import { TiptapEditor } from '@/components/editor';
 import { Button, Loading } from '@/components/ui';
-import { ChevronLeft, Save, Share2, Check } from 'lucide-react';
+import { ChevronLeft, Save, Share2, Check, AlertCircle } from 'lucide-react';
 import { cn } from '@/utils/helpers';
+import { toast } from '@/stores/toastStore';
+
+type SaveStatusType = 'idle' | 'saved' | 'saving' | 'unsaved' | 'error';
 
 export function EditorPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
-  const isNew = !id;
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
   const [version, setVersion] = useState(0);
-  const [saveStatus, setSaveStatus] = useState<'saved' | 'saving' | 'unsaved'>('saved');
+  const [saveStatus, setSaveStatus] = useState<SaveStatusType>('idle');
+  const [noteId, setNoteId] = useState<string | null>(id || null);
+
+  // 追踪内容变化
+  const prevContentRef = useRef({ title: '', content: '' });
+  const isInitialMount = useRef(true);
+
+  const isNew = !noteId;
 
   // 获取笔记
   const { data: note, isLoading } = useQuery({
-    queryKey: ['note', id],
-    queryFn: () => notesApi.get(id!),
-    enabled: !isNew && !!id,
+    queryKey: ['note', noteId],
+    queryFn: () => notesApi.get(noteId!),
+    enabled: !!noteId,
   });
 
   // 保存笔记
@@ -31,14 +40,26 @@ export function EditorPage() {
       if (isNew) {
         return notesApi.create({ ...data, tags: [] });
       }
-      return notesApi.update({ id: id!, ...data, version });
+      return notesApi.update({ id: noteId!, ...data, version });
+    },
+    onMutate: () => {
+      setSaveStatus('saving');
     },
     onSuccess: (savedNote) => {
       setSaveStatus('saved');
+      prevContentRef.current = { title, content };
+      if (savedNote?.version) {
+        setVersion(savedNote.version);
+      }
       queryClient.invalidateQueries({ queryKey: ['notes'] });
       if (isNew && savedNote?.id) {
+        setNoteId(savedNote.id);
         navigate(`/note/${savedNote.id}`, { replace: true });
       }
+    },
+    onError: (error) => {
+      setSaveStatus('error');
+      toast.error('保存失败', error instanceof Error ? error.message : '请稍后重试');
     },
   });
 
@@ -48,18 +69,39 @@ export function EditorPage() {
       setTitle(note.title || '');
       setContent(note.content || '');
       setVersion(note.version || 0);
+      prevContentRef.current = { title: note.title || '', content: note.content || '' };
+      setSaveStatus('saved');
     }
   }, [note]);
 
   // 保存处理
   const handleSave = useCallback(() => {
-    setSaveStatus('saving');
+    // 检查内容是否有变化
+    if (title === prevContentRef.current.title &&
+        content === prevContentRef.current.content) {
+      return;
+    }
     saveMutation.mutate({ title, content });
   }, [title, content, saveMutation]);
 
   // 自动保存
   useEffect(() => {
-    if (isNew && !title && !content) return;
+    // 跳过初始渲染
+    if (isInitialMount.current) {
+      isInitialMount.current = false;
+      return;
+    }
+
+    // 新笔记且无内容时不触发
+    if (isNew && !title.trim() && !content.trim()) {
+      return;
+    }
+
+    // 检查内容是否真的变化
+    if (title === prevContentRef.current.title &&
+        content === prevContentRef.current.content) {
+      return;
+    }
 
     setSaveStatus('unsaved');
     const timer = setTimeout(() => {
@@ -67,7 +109,7 @@ export function EditorPage() {
     }, 2000);
 
     return () => clearTimeout(timer);
-  }, [title, content]);
+  }, [title, content, isNew, handleSave]);
 
   if (isLoading && !isNew) {
     return (
@@ -133,17 +175,25 @@ export function EditorPage() {
 }
 
 // 保存状态指示器
-function SaveStatus({ status }: { status: 'saved' | 'saving' | 'unsaved' }) {
+function SaveStatus({ status }: { status: SaveStatusType }) {
+  if (status === 'idle') return null;
+
   return (
     <span className="text-xs text-gray-400 flex items-center gap-1">
       {status === 'saving' && '保存中...'}
       {status === 'saved' && (
         <>
-          <Check className="w-3 h-3" />
+          <Check className="w-3 h-3 text-green-500" />
           已保存
         </>
       )}
       {status === 'unsaved' && '未保存'}
+      {status === 'error' && (
+        <>
+          <AlertCircle className="w-3 h-3 text-red-500" />
+          保存失败
+        </>
+      )}
     </span>
   );
 }

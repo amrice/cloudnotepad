@@ -15,11 +15,12 @@ export async function onRequest(
         'Access-Control-Allow-Origin': '*',
         'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, OPTIONS',
         'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+        'Access-Control-Allow-Credentials': 'true',
       },
     });
   }
 
-  // 认证路由
+  // 认证路由（无需登录）
   if (path === '/api/auth/setup' && method === 'POST') {
     const { handleSetup } = await import('./auth/index.js');
     return handleSetup(request);
@@ -45,7 +46,31 @@ export async function onRequest(
     return handleCheckSetup();
   }
 
-  // 笔记路由
+  if (path === '/api/auth/change-password' && method === 'POST') {
+    const { handleChangePassword } = await import('./auth/index.js');
+    return handleChangePassword(request);
+  }
+
+  // 公开分享访问（无需登录）
+  if (path.match(/^\/api\/share\/[^/]+\/check$/) && method === 'GET') {
+    const parts = path.split('/');
+    const slug = parts[3];
+    const { handleCheck } = await import('./shares/[slug].js');
+    return handleCheck(request, slug);
+  }
+
+  if (path.startsWith('/api/share/') && method === 'GET' && !path.endsWith('/check')) {
+    const slug = path.split('/').pop();
+    const { handleGet } = await import('./shares/[slug].js');
+    return handleGet(request, slug);
+  }
+
+  // 以下路由需要认证
+  const { authMiddleware } = await import('./auth/index.js');
+  const authResult = await authMiddleware(request);
+  if (authResult) {
+    return authResult;
+  }
   if (path === '/api/notes') {
     if (method === 'GET') {
       const { handleList } = await import('./notes/index.js');
@@ -176,12 +201,6 @@ export async function onRequest(
       const { handleDelete } = await import('./shares/index.js');
       return handleDelete(request, slug);
     }
-  }
-
-  if (path.startsWith('/api/share/') && method === 'GET') {
-    const slug = path.split('/').pop();
-    const { handleGet } = await import('./shares/[slug].js');
-    return handleGet(request, slug);
   }
 
   return new Response(JSON.stringify({ code: 404, message: 'Not Found' }), {

@@ -30,7 +30,7 @@ export async function handleList(request: Request): Promise<Response> {
 // 创建分享
 export async function handleCreate(request: Request): Promise<Response> {
   try {
-    const { noteId, customAlias, expiresInDays } = await request.json();
+    const { noteId, customAlias, expiresInDays, isPublic = true, password } = await request.json();
     const note = await KV.get(`note:${noteId}`, { type: 'json' });
     if (!note) return error(404, '笔记不存在');
 
@@ -46,11 +46,30 @@ export async function handleCreate(request: Request): Promise<Response> {
       expiresAt = expires.toISOString();
     }
 
-    const share = { slug, noteId, customAlias, expiresAt, visitCount: 0, createdAt: new Date().toISOString() };
+    // 密码哈希处理
+    let hashedPassword: string | undefined;
+    if (!isPublic && password) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password + 'share-salt-2024');
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      hashedPassword = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    }
+
+    const share = {
+      slug,
+      noteId,
+      customAlias,
+      isPublic,
+      password: hashedPassword,
+      expiresAt,
+      visitCount: 0,
+      createdAt: new Date().toISOString(),
+    };
     await KV.put(`share:${slug}`, JSON.stringify(share));
 
     const baseUrl = new URL(request.url).origin;
-    return json({ slug, url: `${baseUrl}/s/${slug}`, expiresAt });
+    return json({ slug, url: `${baseUrl}/s/${slug}`, expiresAt, isPublic });
   } catch (err) {
     console.error('Create share error:', err);
     return error(500, '创建分享失败');
@@ -71,7 +90,7 @@ export async function handleDelete(request: Request, slug: string): Promise<Resp
 // 更新分享
 export async function handleUpdate(request: Request, slug: string): Promise<Response> {
   try {
-    const { expiresInDays } = await request.json();
+    const { expiresInDays, isPublic, password } = await request.json();
     const existing = await KV.get(`share:${slug}`, { type: 'json' });
     if (!existing) return error(404, '分享不存在');
 
@@ -86,7 +105,24 @@ export async function handleUpdate(request: Request, slug: string): Promise<Resp
       }
     }
 
-    const updated = { ...existing, expiresAt };
+    // 更新密码
+    let hashedPassword = existing.password;
+    if (isPublic === false && password) {
+      const encoder = new TextEncoder();
+      const data = encoder.encode(password + 'share-salt-2024');
+      const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+      const hashArray = Array.from(new Uint8Array(hashBuffer));
+      hashedPassword = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    } else if (isPublic === true) {
+      hashedPassword = undefined;
+    }
+
+    const updated = {
+      ...existing,
+      expiresAt,
+      isPublic: isPublic ?? existing.isPublic,
+      password: hashedPassword,
+    };
     await KV.put(`share:${slug}`, JSON.stringify(updated));
     return json({ success: true });
   } catch (err) {

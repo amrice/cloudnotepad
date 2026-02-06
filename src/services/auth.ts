@@ -1,5 +1,5 @@
 import { api } from './api';
-import type { LoginResponse, SetupInput } from '@/types/auth';
+import type { LoginResponse, SetupInput, LoginDuration } from '@/types/auth';
 
 export const authApi = {
   // 首次设置密码
@@ -8,8 +8,8 @@ export const authApi = {
   },
 
   // 登录
-  async login(password: string) {
-    return api.post<LoginResponse>('/auth/login', { password });
+  async login(password: string, duration: LoginDuration = '7days') {
+    return api.post<LoginResponse>('/auth/login', { password, duration });
   },
 
   // 登出
@@ -20,5 +20,18 @@ export const authApi = {
   // 验证会话
   async verify() {
     return api.post<{ valid: boolean }>('/auth/verify', {});
+  },
+
+  // 检查是否已设置密码
+  async checkSetup() {
+    return api.get<{ hasSetup: boolean }>('/auth/check-setup');
+  },
+
+  // 修改密码
+  async changePassword(oldPassword: string, newPassword: string) {
+    return api.post<{ success: boolean }>('/auth/change-password', {
+      oldPassword,
+      newPassword,
+    });
   },
 };

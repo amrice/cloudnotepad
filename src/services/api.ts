@@ -1,6 +1,5 @@
 import type { APIResponse } from '@/types/auth';
-import { getAuthToken } from '@/stores/authStore';
-import { API_CONFIG, STORAGE_KEYS } from '@/constants';
+import { API_CONFIG } from '@/constants';
 
 class ApiClient {
   private baseUrl: string;
@@ -13,30 +12,27 @@ class ApiClient {
     endpoint: string,
     options: RequestInit = {}
   ): Promise<T> {
-    const token = getAuthToken();
     const headers: HeadersInit = {
       'Content-Type': 'application/json',
       ...options.headers,
     };
 
-    if (token) {
-      (headers as Record<string, string>)['Authorization'] = `Bearer ${token}`;
-    }
-
     const response = await fetch(`${this.baseUrl}${endpoint}`, {
       ...options,
       headers,
+      credentials: 'include', // 携带 Cookie
       signal: AbortSignal.timeout(API_CONFIG.TIMEOUT),
     });
 
     const data: APIResponse<T> = await response.json();
 
     if (data.code !== 0) {
-      // 处理特殊错误码
+      // 处理 401 未登录
       if (data.code === 401) {
-        // 未登录，清除 token 并刷新页面
-        localStorage.removeItem(STORAGE_KEYS.AUTH_TOKEN);
-        window.location.href = '/login';
+        // 延迟跳转，让用户看到提示
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 1500);
       }
       throw new Error(data.message || '请求失败');
     }

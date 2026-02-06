@@ -1,20 +1,45 @@
-import { verifyToken, json, error } from '../../shared/types';
+import {
+  verifyToken,
+  json,
+  jsonWithCookie,
+  error,
+  createAuthCookie,
+  clearAuthCookie,
+  LOGIN_DURATION_MAP,
+} from '../../shared/types';
+
+// @ts-ignore - KV 是 EdgeOne Pages 的全局变量
+declare const KV: any;
+
+const JWT_SECRET = 'cloudnotepad-jwt-secret-2024';
+const SALT = 'cloudnotepad-default-salt-2024';
+const MAX_LOGIN_ATTEMPTS = 5;
+const LOCKOUT_DURATION = 15 * 60; // 15分钟
+
+// 从 Cookie 中获取 token
+export function getTokenFromCookie(request: Request): string | null {
+  const cookieHeader = request.headers.get('Cookie');
+  if (!cookieHeader) return null;
+
+  const cookies = cookieHeader.split(';').map(c => c.trim());
+  for (const cookie of cookies) {
+    if (cookie.startsWith('auth_token=')) {
+      return cookie.substring(11);
+    }
+  }
+  return null;
+}
 
 // 认证中间件
-export async function authMiddleware(
-  request: Request
-): Promise<Response | null> {
-  const authHeader = request.headers.get('Authorization');
+export async function authMiddleware(request: Request): Promise<Response | null> {
+  const token = getTokenFromCookie(request);
 
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
+  if (!token) {
     return error(401, '未登录');
   }
 
-  const token = authHeader.substring(7);
-  const jwtSecret = 'cloudnotepad-jwt-secret-2024';
-
   try {
-    const result = await verifyToken(token, jwtSecret);
+    const result = await verifyToken(token, JWT_SECRET);
     if (!result.valid) {
       return error(401, '登录已过期');
     }
@@ -25,12 +50,66 @@ export async function authMiddleware(
   return null;
 }
 
+// 生成密码哈希
+async function hashPassword(password: string): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(password + SALT);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+}
+
+// 生成 JWT Token
+function generateToken(duration: string): string {
+  const maxAge = LOGIN_DURATION_MAP[duration] || LOGIN_DURATION_MAP['7days'];
+  const exp = maxAge > 0
+    ? Math.floor(Date.now() / 1000) + maxAge
+    : Math.floor(Date.now() / 1000) + 24 * 60 * 60; // session 默认24小时
+
+  const payload = {
+    sub: 'user',
+    iat: Math.floor(Date.now() / 1000),
+    exp,
+    duration,
+  };
+
+  return btoa(JSON.stringify(payload)) + '.' + btoa(JWT_SECRET) + '.' + 'signature';
+}
+
+// 检查登录限制
+async function checkLoginLimit(): Promise<{ blocked: boolean; remaining?: number }> {
+  const attempts = await KV.get('auth:login_attempts', { type: 'json' }) || { count: 0, lastAttempt: 0 };
+  const now = Date.now() / 1000;
+
+  if (attempts.count >= MAX_LOGIN_ATTEMPTS) {
+    const elapsed = now - attempts.lastAttempt;
+    if (elapsed < LOCKOUT_DURATION) {
+      return { blocked: true, remaining: Math.ceil(LOCKOUT_DURATION - elapsed) };
+    }
+    // 锁定时间已过，重置
+    await KV.put('auth:login_attempts', JSON.stringify({ count: 0, lastAttempt: 0 }));
+  }
+
+  return { blocked: false };
+}
+
+// 记录登录失败
+async function recordLoginFailure(): Promise<void> {
+  const attempts = await KV.get('auth:login_attempts', { type: 'json' }) || { count: 0, lastAttempt: 0 };
+  await KV.put('auth:login_attempts', JSON.stringify({
+    count: attempts.count + 1,
+    lastAttempt: Date.now() / 1000,
+  }));
+}
+
+// 重置登录限制
+async function resetLoginLimit(): Promise<void> {
+  await KV.put('auth:login_attempts', JSON.stringify({ count: 0, lastAttempt: 0 }));
+}
+
 // 首次设置密码
-export async function handleSetup(
-  request: Request
-): Promise<Response> {
+export async function handleSetup(request: Request): Promise<Response> {
   try {
-    // @ts-ignore - KV 是 EdgeOne Pages 的全局变量
     if (typeof KV === 'undefined') {
       return error(500, 'KV 存储未配置');
     }
@@ -41,25 +120,13 @@ export async function handleSetup(
       return error(400, '密码长度至少 4 位');
     }
 
-    // 检查是否已设置过密码
-    // @ts-ignore
     const hasSetup = await KV.get('config:hasSetup');
     if (hasSetup) {
       return error(400, '密码已设置，请直接登录');
     }
 
-    // 生成密码哈希
-    const salt = 'cloudnotepad-default-salt-2024';
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password + salt);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
-
-    // 保存密码哈希
-    // @ts-ignore
+    const hashHex = await hashPassword(password);
     await KV.put('config:password', hashHex);
-    // @ts-ignore
     await KV.put('config:hasSetup', 'true');
 
     return json({ success: true });
@@ -70,53 +137,52 @@ export async function handleSetup(
 }
 
 // 登录
-export async function handleLogin(
-  request: Request
-): Promise<Response> {
+export async function handleLogin(request: Request): Promise<Response> {
   try {
-    const { password } = await request.json();
+    // 检查登录限制
+    const limit = await checkLoginLimit();
+    if (limit.blocked) {
+      return error(429, `登录失败次数过多，请 ${limit.remaining} 秒后重试`);
+    }
 
-    // 检查是否首次设置
-    // @ts-ignore
+    const { password, duration = '7days' } = await request.json();
+
     const hasSetup = await KV.get('config:hasSetup');
     if (!hasSetup) {
       return error(401, '请先设置密码');
     }
 
-    // 验证密码
-    const salt = 'cloudnotepad-default-salt-2024';
-    // @ts-ignore
     const storedHash = await KV.get('config:password');
-    const encoder = new TextEncoder();
-    const data = encoder.encode(password + salt);
-    const hashBuffer = await crypto.subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    const hashHex = hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+    const inputHash = await hashPassword(password);
 
-    if (hashHex !== storedHash) {
+    if (inputHash !== storedHash) {
+      await recordLoginFailure();
       return error(401, '密码错误');
     }
 
-    // 生成 token
-    const jwtSecret = 'cloudnotepad-jwt-secret-2024';
-    const payload = {
-      sub: 'user',
-      iat: Math.floor(Date.now() / 1000),
-      exp: Math.floor(Date.now() / 1000) + 7 * 24 * 60 * 60,
-    };
-    const token = btoa(JSON.stringify(payload)) + '.' + btoa(jwtSecret) + '.' + 'signature';
+    // 登录成功，重置限制
+    await resetLoginLimit();
 
-    return json({ success: true, token });
+    // 生成 token 和 cookie
+    const token = generateToken(duration);
+    const maxAge = LOGIN_DURATION_MAP[duration] || LOGIN_DURATION_MAP['7days'];
+    const cookie = createAuthCookie(token, maxAge);
+
+    return jsonWithCookie({ success: true }, cookie);
   } catch (err) {
     console.error('Login error:', err);
     return error(500, '登录失败');
   }
 }
 
+// 登出
+export async function handleLogout(): Promise<Response> {
+  const cookie = clearAuthCookie();
+  return jsonWithCookie({ success: true }, cookie);
+}
+
 // 验证会话
-export async function handleVerify(
-  request: Request
-): Promise<Response> {
+export async function handleVerify(request: Request): Promise<Response> {
   const authResult = await authMiddleware(request);
   if (authResult) {
     return json({ valid: false });
@@ -124,24 +190,51 @@ export async function handleVerify(
   return json({ valid: true });
 }
 
-// 登出
-export async function handleLogout(): Promise<Response> {
-  return json({ success: true });
-}
-
 // 检查是否已设置密码
 export async function handleCheckSetup(): Promise<Response> {
   try {
-    // @ts-ignore - KV 是 EdgeOne Pages 的全局变量
     if (typeof KV === 'undefined') {
       return error(500, 'KV 存储未配置');
     }
 
-    // @ts-ignore
     const hasSetup = await KV.get('config:hasSetup');
     return json({ hasSetup: !!hasSetup });
   } catch (err) {
     console.error('Check setup error:', err);
     return error(500, '检查设置状态失败');
+  }
+}
+
+// 修改密码
+export async function handleChangePassword(request: Request): Promise<Response> {
+  try {
+    // 验证登录状态
+    const authResult = await authMiddleware(request);
+    if (authResult) {
+      return authResult;
+    }
+
+    const { oldPassword, newPassword } = await request.json();
+
+    if (!newPassword || newPassword.length < 4) {
+      return error(400, '新密码长度至少 4 位');
+    }
+
+    // 验证旧密码
+    const storedHash = await KV.get('config:password');
+    const oldHash = await hashPassword(oldPassword);
+
+    if (oldHash !== storedHash) {
+      return error(401, '旧密码错误');
+    }
+
+    // 设置新密码
+    const newHash = await hashPassword(newPassword);
+    await KV.put('config:password', newHash);
+
+    return json({ success: true });
+  } catch (err) {
+    console.error('Change password error:', err);
+    return error(500, '修改密码失败');
   }
 }

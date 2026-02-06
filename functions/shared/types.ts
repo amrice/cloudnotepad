@@ -32,6 +32,8 @@ export interface Share {
   slug: string;
   noteId: string;
   customAlias?: string;
+  isPublic: boolean;
+  password?: string;
   expiresAt?: string;
   visitCount: number;
   createdAt: string;
@@ -57,6 +59,44 @@ export function error(code: number, message: string): Response {
     status: code,
     headers: { 'Content-Type': 'application/json' },
   });
+}
+
+// 带 Cookie 的 JSON 响应
+export function jsonWithCookie<T>(data: T, cookie: string, status = 200): Response {
+  return new Response(JSON.stringify({ code: 0, message: 'success', data }), {
+    status,
+    headers: {
+      'Content-Type': 'application/json',
+      'Set-Cookie': cookie,
+    },
+  });
+}
+
+// 登录时长映射（秒）
+export const LOGIN_DURATION_MAP: Record<string, number> = {
+  'session': 0,        // Session Cookie
+  '7days': 604800,     // 7天
+  '30days': 2592000,   // 30天
+};
+
+// 生成 Cookie 字符串
+export function createAuthCookie(token: string, maxAge: number): string {
+  const parts = [
+    `auth_token=${token}`,
+    'Path=/',
+    'HttpOnly',
+    'Secure',
+    'SameSite=Strict',
+  ];
+  if (maxAge > 0) {
+    parts.push(`Max-Age=${maxAge}`);
+  }
+  return parts.join('; ');
+}
+
+// 清除 Cookie
+export function clearAuthCookie(): string {
+  return 'auth_token=; Path=/; HttpOnly; Secure; SameSite=Strict; Max-Age=0';
 }
 
 // JWT 验证（简化版）

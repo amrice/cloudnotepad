@@ -1,17 +1,34 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { notesApi } from '@/services/notes';
 import { Button, Input, Loading } from '@/components/ui';
-import { Plus, Search, FileText, Sun, Moon, Monitor } from 'lucide-react';
+import { Plus, Search, FileText, Sun, Moon, Monitor, Settings, Key, LogOut } from 'lucide-react';
 import { cn } from '@/utils/helpers';
 import { formatRelativeTime } from '@/utils/date';
 import { useTheme } from '@/hooks';
+import { useAuthStore } from '@/stores/authStore';
+import { ChangePasswordDialog } from '@/components/ChangePasswordDialog';
 
 export function HomePage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+  const [showChangePassword, setShowChangePassword] = useState(false);
+  const settingsRef = useRef<HTMLDivElement>(null);
   const { theme, toggleTheme } = useTheme();
+  const { logout } = useAuthStore();
+
+  // 点击外部关闭设置菜单
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target as Node)) {
+        setShowSettings(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
 
   const ThemeIcon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Monitor;
 
@@ -45,13 +62,53 @@ export function HomePage() {
           </div>
 
           <div className="flex items-center gap-2">
-            <button
-              onClick={toggleTheme}
-              className="hidden lg:flex p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
-              title={theme === 'light' ? '浅色' : theme === 'dark' ? '深色' : '跟随系统'}
-            >
-              <ThemeIcon className="w-5 h-5 text-gray-600 dark:text-gray-400" />
-            </button>
+            {/* 设置菜单 */}
+            <div className="relative" ref={settingsRef}>
+              <button
+                onClick={() => setShowSettings(!showSettings)}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+                title="设置"
+              >
+                <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400" />
+              </button>
+
+              {showSettings && (
+                <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                  <button
+                    onClick={() => {
+                      toggleTheme();
+                      setShowSettings(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                  >
+                    <ThemeIcon className="w-4 h-4" />
+                    {theme === 'light' ? '浅色模式' : theme === 'dark' ? '深色模式' : '跟随系统'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowChangePassword(true);
+                      setShowSettings(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                  >
+                    <Key className="w-4 h-4" />
+                    修改密码
+                  </button>
+                  <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
+                  <button
+                    onClick={() => {
+                      logout();
+                      setShowSettings(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    退出登录
+                  </button>
+                </div>
+              )}
+            </div>
+
             <Button onClick={handleCreateNote} icon={<Plus className="w-4 h-4" />}>
               <span className="hidden sm:inline">新建笔记</span>
             </Button>
@@ -90,6 +147,12 @@ export function HomePage() {
           </div>
         )}
       </main>
+
+      {/* 修改密码弹窗 */}
+      <ChangePasswordDialog
+        open={showChangePassword}
+        onClose={() => setShowChangePassword(false)}
+      />
     </div>
   );
 }
