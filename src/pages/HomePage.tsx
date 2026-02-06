@@ -28,7 +28,7 @@ export function HomePage() {
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; title: string } | null>(null);
   const [batchDeleteConfirm, setBatchDeleteConfirm] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
-  const { theme, toggleTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
   const { logout } = useAuthStore();
   const {
     viewMode, setViewMode,
@@ -45,8 +45,6 @@ export function HomePage() {
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
-
-  const ThemeIcon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Monitor;
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['notes', { search }],
@@ -162,16 +160,39 @@ export function HomePage() {
 
               {showSettings && (
                 <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                  {/* 主题选项 */}
+                  <div className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">主题</div>
                   <button
-                    onClick={() => {
-                      toggleTheme();
-                      setShowSettings(false);
-                    }}
-                    className="w-full px-4 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                    onClick={() => { setTheme('light'); setShowSettings(false); }}
+                    className={cn(
+                      "w-full px-4 py-2 text-left text-sm flex items-center gap-2",
+                      theme === 'light' ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    )}
                   >
-                    <ThemeIcon className="w-4 h-4" />
-                    {theme === 'light' ? '浅色模式' : theme === 'dark' ? '深色模式' : '跟随系统'}
+                    <Sun className="w-4 h-4" />
+                    浅色模式
                   </button>
+                  <button
+                    onClick={() => { setTheme('dark'); setShowSettings(false); }}
+                    className={cn(
+                      "w-full px-4 py-2 text-left text-sm flex items-center gap-2",
+                      theme === 'dark' ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    )}
+                  >
+                    <Moon className="w-4 h-4" />
+                    深色模式
+                  </button>
+                  <button
+                    onClick={() => { setTheme('system'); setShowSettings(false); }}
+                    className={cn(
+                      "w-full px-4 py-2 text-left text-sm flex items-center gap-2",
+                      theme === 'system' ? "text-blue-600 bg-blue-50 dark:bg-blue-900/20" : "text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+                    )}
+                  >
+                    <Monitor className="w-4 h-4" />
+                    跟随系统
+                  </button>
+                  <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
                   <button
                     onClick={() => {
                       setShowChangePassword(true);
