@@ -12,9 +12,13 @@ export async function handleList(request: Request): Promise<Response> {
     const tag = url.searchParams.get('tag');
     const search = url.searchParams.get('search');
 
+    // 调试：打印 KV.list 的返回值
     const result = await KV.list({ prefix: 'note:', limit: 100 });
+    console.log('KV.list result:', JSON.stringify(result));
+
     const notes: NoteListItem[] = [];
     const keys = result?.keys || [];
+    console.log('Keys found:', keys.length, JSON.stringify(keys));
 
     for (const key of keys) {
       const keyName = typeof key === 'string' ? key : key.name;
