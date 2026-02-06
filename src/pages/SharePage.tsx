@@ -5,13 +5,17 @@ import { sharesApi } from '@/services/shares';
 import { Loading } from '@/components/ui';
 import { formatRelativeTime } from '@/utils/date';
 import { cn } from '@/utils/helpers';
-import { Lock } from 'lucide-react';
+import { useTheme } from '@/hooks';
+import { Lock, Sun, Moon, Monitor } from 'lucide-react';
 
 export function SharePage() {
   const { slug } = useParams();
   const [password, setPassword] = useState('');
   const [submittedPassword, setSubmittedPassword] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState('');
+  const [showSettings, setShowSettings] = useState(false);
+
+  const { theme, setTheme } = useTheme();
 
   // 先检查分享是否需要密码
   const { data: checkData, isLoading: isChecking } = useQuery({
@@ -150,11 +154,83 @@ export function SharePage() {
       {/* Header */}
       <header className={cn(
         'sticky top-0 z-20 h-14',
-        'px-4 flex items-center justify-center',
+        'px-4 flex items-center justify-between',
         'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md',
         'border-b border-gray-200 dark:border-gray-800'
       )}>
         <span className="text-sm text-gray-500">云记事本分享</span>
+
+        {/* 主题切换 */}
+        <div className="relative">
+          <button
+            onClick={() => setShowSettings(!showSettings)}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800"
+          >
+            {theme === 'dark' ? (
+              <Moon className="w-5 h-5" />
+            ) : theme === 'system' ? (
+              <Monitor className="w-5 h-5" />
+            ) : (
+              <Sun className="w-5 h-5" />
+            )}
+          </button>
+
+          {showSettings && (
+            <>
+              <div
+                className="fixed inset-0 z-40"
+                onClick={() => setShowSettings(false)}
+              />
+              <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
+                <div className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">主题</div>
+                {/* 跟随系统开关 */}
+                <div className="px-4 py-2 flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                    <Monitor className="w-4 h-4" />
+                    <span>跟随系统</span>
+                  </div>
+                  <button
+                    onClick={() => setTheme(theme === 'system' ? 'light' : 'system')}
+                    className={cn(
+                      "relative w-11 h-6 rounded-full transition-colors duration-300",
+                      theme === 'system' ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300",
+                        theme === 'system' ? "translate-x-5" : "translate-x-0"
+                      )}
+                    />
+                  </button>
+                </div>
+                {/* 深色模式开关 */}
+                {theme !== 'system' && (
+                  <div className="px-4 py-2 flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                      {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                      <span>深色模式</span>
+                    </div>
+                    <button
+                      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                      className={cn(
+                        "relative w-11 h-6 rounded-full transition-colors duration-300",
+                        theme === 'dark' ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"
+                      )}
+                    >
+                      <span
+                        className={cn(
+                          "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300",
+                          theme === 'dark' ? "translate-x-5" : "translate-x-0"
+                        )}
+                      />
+                    </button>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
+        </div>
       </header>
 
       {/* Content */}
