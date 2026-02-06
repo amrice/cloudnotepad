@@ -257,20 +257,31 @@ export async function handleReset(request: Request): Promise<Response> {
       return error(401, '密码错误');
     }
 
-    // 获取所有 key 并删除
-    const result = await KV.list({ limit: 1000 });
-    const keys = result?.keys || [];
+    // 获取所有 key 并删除（分批获取，每次最多 256）
+    let deletedCount = 0;
+    let cursor: string | undefined;
 
-    for (const key of keys) {
-      const keyName = typeof key === 'string' ? key : (key.key || key.name);
-      if (keyName) {
-        await KV.delete(keyName);
+    do {
+      const listOptions: { limit: number; cursor?: string } = { limit: 256 };
+      if (cursor) listOptions.cursor = cursor;
+
+      const result = await KV.list(listOptions);
+      const keys = result?.keys || [];
+
+      for (const key of keys) {
+        const keyName = typeof key === 'string' ? key : (key.key || key.name);
+        if (keyName) {
+          await KV.delete(keyName);
+          deletedCount++;
+        }
       }
-    }
+
+      cursor = result?.cursor;
+    } while (cursor);
 
     // 清除 Cookie
     const cookie = clearAuthCookie();
-    return jsonWithCookie({ success: true, deleted: keys.length }, cookie);
+    return jsonWithCookie({ success: true, deleted: deletedCount }, cookie);
   } catch (err) {
     console.error('Reset error:', err);
     return error(500, '重置失败: ' + String(err));
