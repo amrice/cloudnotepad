@@ -158,7 +158,7 @@ export async function handlePatch(request: Request, id: string): Promise<Respons
   }
 }
 
-// 删除笔记
+// 删除笔记（硬删除）
 export async function handleDelete(request: Request, id: string): Promise<Response> {
   try {
     const existing = await KV.get(`note:${id}`, { type: 'json' });
@@ -166,13 +166,8 @@ export async function handleDelete(request: Request, id: string): Promise<Respon
       return error(404, '笔记不存在');
     }
 
-    const updated = {
-      ...existing,
-      isDeleted: true,
-      updatedAt: new Date().toISOString(),
-    };
-
-    await KV.put(`note:${id}`, JSON.stringify(updated));
+    // 真正从 KV 中删除数据
+    await KV.delete(`note:${id}`);
     return json({ success: true });
   } catch (err) {
     console.error('Delete note error:', err);
