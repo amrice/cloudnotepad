@@ -212,7 +212,7 @@ export function EditorPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 flex flex-col">
+    <div className="h-screen bg-white dark:bg-gray-900 flex flex-col overflow-hidden">
       {/* Toolbar */}
       <header className={cn(
         'sticky top-0 z-20 h-14',

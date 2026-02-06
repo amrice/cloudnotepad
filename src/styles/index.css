@@ -178,6 +178,16 @@ body {
   min-height: 0 !important;
 }
 
+/* 编辑区文本容器 - 撑满高度 */
+.md-editor-wrapper .w-md-editor-text {
+  min-height: 100% !important;
+  height: 100% !important;
+}
+
+.md-editor-wrapper .w-md-editor-area {
+  height: 100% !important;
+}
+
 .dark .md-editor-wrapper .w-md-editor-content {
   background-color: transparent !important;
 }
