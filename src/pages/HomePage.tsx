@@ -685,15 +685,15 @@ function NoteListItem({ note, isSelectMode, isSelected, onSelect, onClick, onDel
 
         {/* 操作菜单 */}
         {!isSelectMode && (
-          <div className="flex-shrink-0 w-8" ref={menuRef}>
+          <div className="relative flex-shrink-0 w-8" ref={menuRef}>
             <button
               onClick={(e) => { e.stopPropagation(); setShowMenu(!showMenu); }}
-              className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-gray-200 dark:hover:bg-gray-600 transition-opacity"
+              className="p-1.5 rounded-lg hover:bg-gray-200 dark:hover:bg-gray-600"
             >
               <MoreVertical className="w-4 h-4 text-gray-500" />
             </button>
             {showMenu && (
-              <div className="absolute right-4 top-full mt-1 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-10">
+              <div className="absolute right-0 top-full mt-1 w-32 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-20">
                 <button
                   onClick={(e) => { e.stopPropagation(); onClick(); }}
                   className="w-full px-3 py-2 text-left text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
