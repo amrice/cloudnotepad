@@ -169,7 +169,7 @@ export function SharePage() {
     <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-950">
       {/* Header */}
       <header className={cn(
-        'sticky top-0 z-20 h-14',
+        'sticky top-0 z-20 h-14 w-full',
         'px-4 flex items-center justify-between',
         'bg-white/80 dark:bg-gray-900/80 backdrop-blur-md',
         'border-b border-gray-200 dark:border-gray-800'
