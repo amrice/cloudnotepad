@@ -113,6 +113,8 @@ body {
   flex: 1 !important;
   display: flex !important;
   flex-direction: column !important;
+  height: 100% !important;
+  min-height: 0 !important;
 }
 
 .dark .md-editor-wrapper .w-md-editor {
