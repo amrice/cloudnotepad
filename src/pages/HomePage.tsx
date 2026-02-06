@@ -162,31 +162,6 @@ export function HomePage() {
                 <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 py-1 z-50">
                   {/* 主题选项 */}
                   <div className="px-4 py-2 text-xs text-gray-500 dark:text-gray-400">主题</div>
-                  {/* 深色模式开关 */}
-                  <div className="px-4 py-2 flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                      {theme === 'dark' || (theme === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches) ? (
-                        <Moon className="w-4 h-4" />
-                      ) : (
-                        <Sun className="w-4 h-4" />
-                      )}
-                      <span>深色模式</span>
-                    </div>
-                    <button
-                      onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                      className={cn(
-                        "relative w-11 h-6 rounded-full transition-colors duration-300",
-                        theme === 'dark' ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"
-                      )}
-                    >
-                      <span
-                        className={cn(
-                          "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300",
-                          theme === 'dark' ? "translate-x-5" : "translate-x-0"
-                        )}
-                      />
-                    </button>
-                  </div>
                   {/* 跟随系统开关 */}
                   <div className="px-4 py-2 flex items-center justify-between">
                     <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
@@ -208,6 +183,29 @@ export function HomePage() {
                       />
                     </button>
                   </div>
+                  {/* 深色模式开关 - 仅在跟随系统关闭时显示 */}
+                  {theme !== 'system' && (
+                    <div className="px-4 py-2 flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                        {theme === 'dark' ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+                        <span>深色模式</span>
+                      </div>
+                      <button
+                        onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                        className={cn(
+                          "relative w-11 h-6 rounded-full transition-colors duration-300",
+                          theme === 'dark' ? "bg-blue-500" : "bg-gray-300 dark:bg-gray-600"
+                        )}
+                      >
+                        <span
+                          className={cn(
+                            "absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform duration-300",
+                            theme === 'dark' ? "translate-x-5" : "translate-x-0"
+                          )}
+                        />
+                      </button>
+                    </div>
+                  )}
                   <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
                   <button
                     onClick={() => {
