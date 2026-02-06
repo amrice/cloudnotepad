@@ -65,6 +65,8 @@ body {
   color: var(--color-light-text);
   min-height: 100vh;
   overflow: hidden;
+  margin: 0;
+  padding: 0;
 }
 
 .dark body {
