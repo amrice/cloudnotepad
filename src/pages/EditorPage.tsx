@@ -24,6 +24,7 @@ export function EditorPage() {
   const prevContentRef = useRef({ title: '', content: '' });
   const serverContentRef = useRef({ title: '', content: '', version: 0 });
   const isInitialMount = useRef(true);
+  const justCreatedRef = useRef(false); // 标记刚创建的笔记
   const [showShareDialog, setShowShareDialog] = useState(false);
 
   const isNew = !noteId;
@@ -104,6 +105,7 @@ export function EditorPage() {
       if (isNew) {
         // 新笔记：创建
         savedNote = await notesApi.create({ title, content, tags: [] });
+        justCreatedRef.current = true; // 标记刚创建
         setNoteId(savedNote.id);
         // 静默更新 URL，不触发路由重新渲染
         window.history.replaceState(null, '', `/note/${savedNote.id}`);
@@ -167,6 +169,11 @@ export function EditorPage() {
 
   // 初始化内容
   useEffect(() => {
+    // 刚创建的笔记，跳过初始化（避免覆盖当前编辑内容）
+    if (justCreatedRef.current) {
+      justCreatedRef.current = false;
+      return;
+    }
     if (note) {
       setTitle(note.title || '');
       setContent(note.content || '');
