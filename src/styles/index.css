@@ -167,12 +167,9 @@ body {
   background-color: #1E293B !important;
 }
 
-/* 编辑区域 */
+/* 编辑区域 - 保持默认等宽字体避免光标错位 */
 .md-editor-wrapper .w-md-editor-text-input,
 .md-editor-wrapper .w-md-editor-text-pre {
-  font-family: 'Inter', system-ui, sans-serif !important;
-  font-size: 15px !important;
-  line-height: 1.7 !important;
   color: #1E293B !important;
 }
 
