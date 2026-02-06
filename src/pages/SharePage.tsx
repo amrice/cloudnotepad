@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, memo } from 'react';
 import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { sharesApi } from '@/services/shares';
@@ -7,6 +7,16 @@ import { formatRelativeTime } from '@/utils/date';
 import { cn } from '@/utils/helpers';
 import { useTheme } from '@/hooks';
 import { Lock, Sun, Moon, Monitor } from 'lucide-react';
+
+// 内容区域组件 - 使用 memo 避免主题切换时重新渲染
+const ArticleContent = memo(function ArticleContent({ content }: { content: string }) {
+  return (
+    <div
+      className="prose dark:prose-invert max-w-none"
+      dangerouslySetInnerHTML={{ __html: content }}
+    />
+  );
+});
 
 export function SharePage() {
   const { slug } = useParams();
@@ -244,10 +254,7 @@ export function SharePage() {
             分享于 {formatRelativeTime(data.createdAt)}
           </div>
 
-          <div
-            className="prose dark:prose-invert max-w-none"
-            dangerouslySetInnerHTML={{ __html: data.content }}
-          />
+          <ArticleContent content={data.content} />
         </article>
       </main>
     </div>
