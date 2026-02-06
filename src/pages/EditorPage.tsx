@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { notesApi } from '@/services/notes';
@@ -28,6 +28,25 @@ export function EditorPage() {
   const [showShareDialog, setShowShareDialog] = useState(false);
 
   const isNew = !noteId;
+
+  // 计算统计信息
+  const stats = useMemo(() => {
+    const text = content || '';
+    // 字符数（不含空格）
+    const chars = text.replace(/\s/g, '').length;
+    // 字符数（含空格）
+    const charsWithSpaces = text.length;
+    // 中文字数
+    const chineseChars = (text.match(/[\u4e00-\u9fa5]/g) || []).length;
+    // 英文单词数
+    const englishWords = (text.match(/[a-zA-Z]+/g) || []).length;
+    // 行数
+    const lines = text ? text.split('\n').length : 0;
+    // 段落数（非空行）
+    const paragraphs = text ? text.split('\n').filter(line => line.trim()).length : 0;
+
+    return { chars, charsWithSpaces, chineseChars, englishWords, lines, paragraphs };
+  }, [content]);
 
   // 获取笔记
   const { data: note, isLoading } = useQuery({
@@ -261,9 +280,23 @@ export function EditorPage() {
           content={content}
           onChange={setContent}
           placeholder="开始写作..."
-          className="h-[calc(100vh-56px)]"
+          className="h-full"
         />
       </main>
+
+      {/* 底栏统计 */}
+      <footer className={cn(
+        'h-8 px-4 flex items-center gap-4',
+        'bg-gray-50 dark:bg-gray-800/50',
+        'border-t border-gray-200 dark:border-gray-800',
+        'text-xs text-gray-500 dark:text-gray-400'
+      )}>
+        <span>{stats.chineseChars} 字</span>
+        <span>{stats.englishWords} 词</span>
+        <span>{stats.chars} 字符</span>
+        <span>{stats.paragraphs} 段</span>
+        <span>{stats.lines} 行</span>
+      </footer>
 
       {/* 分享弹窗 */}
       {noteId && (
