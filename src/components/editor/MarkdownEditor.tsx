@@ -40,6 +40,20 @@ export function MarkdownEditor({
     );
   }
 
+  // 自定义标题命令（只显示图标）
+  const title1: typeof commands.title1 = {
+    ...commands.title1,
+    icon: <span style={{ fontSize: '12px', fontWeight: 'bold' }}>H1</span>,
+  };
+  const title2: typeof commands.title2 = {
+    ...commands.title2,
+    icon: <span style={{ fontSize: '12px', fontWeight: 'bold' }}>H2</span>,
+  };
+  const title3: typeof commands.title3 = {
+    ...commands.title3,
+    icon: <span style={{ fontSize: '12px', fontWeight: 'bold' }}>H3</span>,
+  };
+
   // 基础工具栏（单行）
   const basicCommands = [
     commands.bold,
@@ -60,9 +74,9 @@ export function MarkdownEditor({
     commands.italic,
     commands.strikethrough,
     commands.divider,
-    commands.title1,
-    commands.title2,
-    commands.title3,
+    title1,
+    title2,
+    title3,
     commands.divider,
     commands.link,
     commands.image,
