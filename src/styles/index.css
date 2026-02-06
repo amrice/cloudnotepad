@@ -174,7 +174,7 @@ body {
 /* 内容区域 - 自适应高度 */
 .md-editor-wrapper .w-md-editor-content {
   flex: 1 !important;
-  height: auto !important;
+  height: 100% !important;
   min-height: 0 !important;
 }
 
