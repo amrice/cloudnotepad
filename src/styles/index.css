@@ -334,3 +334,20 @@ body {
 .dark .md-editor-wrapper .wmde-markdown table td {
   border-color: #334155 !important;
 }
+
+/* B站视频iframe自适应 */
+.md-editor-wrapper .wmde-markdown iframe[src*="bilibili"],
+.md-editor-wrapper .wmde-markdown iframe[src*="player.bilibili.com"],
+.wmde-markdown iframe[src*="bilibili"],
+.wmde-markdown iframe[src*="player.bilibili.com"],
+.prose iframe[src*="bilibili"],
+.prose iframe[src*="player.bilibili.com"] {
+  display: block !important;
+  width: 100% !important;
+  max-width: 800px !important;
+  height: auto !important;
+  aspect-ratio: 16 / 9 !important;
+  margin: 16px auto !important;
+  border-radius: 8px !important;
+  border: none !important;
+}
