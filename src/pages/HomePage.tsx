@@ -32,10 +32,15 @@ export function HomePage() {
 
   const ThemeIcon = theme === 'light' ? Sun : theme === 'dark' ? Moon : Monitor;
 
-  const { data, isLoading } = useQuery({
+  const { data, isLoading, error } = useQuery({
     queryKey: ['notes', { search }],
     queryFn: () => notesApi.list({ search }),
   });
+
+  // 调试：打印错误信息
+  if (error) {
+    console.error('获取笔记列表失败:', error);
+  }
 
   const handleCreateNote = () => {
     navigate('/note/new');
@@ -132,6 +137,18 @@ export function HomePage() {
         {isLoading ? (
           <div className="flex items-center justify-center h-64">
             <Loading />
+          </div>
+        ) : error ? (
+          <div className="flex flex-col items-center justify-center h-64 text-center">
+            <div className="w-16 h-16 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-4">
+              <FileText className="w-8 h-8 text-red-500" />
+            </div>
+            <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
+              加载失败
+            </h3>
+            <p className="text-gray-500 dark:text-gray-400 mb-4">
+              {error instanceof Error ? error.message : '获取笔记列表失败'}
+            </p>
           </div>
         ) : !data?.notes?.length ? (
           <EmptyState onCreateNote={handleCreateNote} />
