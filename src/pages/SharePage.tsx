@@ -137,7 +137,7 @@ export function SharePage() {
 
   // 正常显示内容
   return (
-    <div style={{ position: 'absolute', left: 0, top: 0, right: 0, minHeight: '100vh', margin: 0, padding: 0 }} className="bg-gray-50 dark:bg-gray-950">
+    <div style={{ position: 'fixed', left: 0, top: 0, right: 0, bottom: 0, overflow: 'auto' }} className="bg-gray-50 dark:bg-gray-950">
       {/* Header */}
       <header
         style={{ width: '100%', height: '56px', position: 'sticky', top: 0, zIndex: 20 }}
