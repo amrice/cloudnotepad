@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import MDEditor, { commands } from '@uiw/react-md-editor';
 import { useTheme } from '@/hooks';
 import { cn } from '@/utils/helpers';
@@ -21,7 +21,16 @@ export function MarkdownEditor({
 }: MarkdownEditorProps) {
   const { theme } = useTheme();
   const [toolbarExpanded, setToolbarExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const colorMode = theme === 'dark' ? 'dark' : 'light';
+
+  // 检测是否为移动端
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   if (readOnly) {
     return (
@@ -69,7 +78,7 @@ export function MarkdownEditor({
     commands.table,
   ];
 
-  // 展开/收起按钮
+  // 展开/收起按钮（仅移动端使用）
   const toggleCommand = {
     name: 'toggle-toolbar',
     keyCommand: 'toggle-toolbar',
@@ -82,6 +91,15 @@ export function MarkdownEditor({
     execute: () => setToolbarExpanded(!toolbarExpanded),
   };
 
+  // 根据设备类型决定工具栏配置
+  const toolbarCommands = isMobile
+    ? (toolbarExpanded ? expandedCommands : basicCommands)
+    : expandedCommands;
+
+  const extraToolbarCommands = isMobile
+    ? [commands.codeEdit, commands.codeLive, commands.codePreview, commands.divider, toggleCommand]
+    : [commands.codeEdit, commands.codeLive, commands.codePreview];
+
   return (
     <div data-color-mode={colorMode} className={cn('md-editor-wrapper', className)}>
       <MDEditor
@@ -90,14 +108,8 @@ export function MarkdownEditor({
         preview="live"
         height="100%"
         visibleDragbar={false}
-        commands={toolbarExpanded ? expandedCommands : basicCommands}
-        extraCommands={[
-          commands.codeEdit,
-          commands.codeLive,
-          commands.codePreview,
-          commands.divider,
-          toggleCommand,
-        ]}
+        commands={toolbarCommands}
+        extraCommands={extraToolbarCommands}
         textareaProps={{
           placeholder,
         }}
