@@ -46,6 +46,22 @@ export async function onRequest(
     return handleCheckSetup();
   }
 
+  // 调试：列出 KV 中所有 key
+  if (path === '/api/debug/kv-keys' && method === 'GET') {
+    // @ts-ignore
+    const result = await KV.list({ limit: 100 });
+    return new Response(JSON.stringify({
+      code: 0,
+      message: 'success',
+      data: {
+        raw: result,
+        keys: result?.keys || [],
+      }
+    }), {
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
   if (path === '/api/auth/change-password' && method === 'POST') {
     const { handleChangePassword } = await import('./auth/index.js');
     return handleChangePassword(request);
