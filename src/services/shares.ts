@@ -34,4 +34,11 @@ export const sharesApi = {
       `/shares/${slug}/stats`
     );
   },
+
+  // 根据 slug 获取分享内容
+  async getBySlug(slug: string) {
+    return api.get<{ title: string; content: string; createdAt: string }>(
+      `/s/${slug}`
+    );
+  },
 };

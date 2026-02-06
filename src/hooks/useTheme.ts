@@ -1,52 +1,63 @@
-import { useState, useEffect, useCallback } from 'react';
-import { STORAGE_KEYS } from '@/constants';
+import { useEffect, useState, useCallback } from 'react';
 
 type Theme = 'light' | 'dark' | 'system';
 
+const THEME_KEY = 'cloudnotepad-theme';
+
+function getSystemTheme(): 'light' | 'dark' {
+  return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+}
+
 export function useTheme() {
-  const [theme, setTheme] = useState<Theme>(() => {
-    const saved = localStorage.getItem(STORAGE_KEYS.THEME) as Theme | null;
+  const [theme, setThemeState] = useState<Theme>(() => {
+    const saved = localStorage.getItem(THEME_KEY) as Theme | null;
     return saved || 'system';
   });
 
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('light');
+  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>(() => {
+    const saved = localStorage.getItem(THEME_KEY) as Theme | null;
+    if (saved && saved !== 'system') return saved;
+    return getSystemTheme();
+  });
 
-  // 应用主题
-  const applyTheme = useCallback((newTheme: Theme) => {
-    const root = window.document.documentElement;
+  // 应用主题到 DOM
+  useEffect(() => {
+    const root = document.documentElement;
+    const resolved = theme === 'system' ? getSystemTheme() : theme;
 
-    const isDark =
-      newTheme === 'dark' ||
-      (newTheme === 'system' &&
-        window.matchMedia('(prefers-color-scheme: dark)').matches);
+    root.classList.remove('light', 'dark');
+    root.classList.add(resolved);
+    setResolvedTheme(resolved);
 
-    root.classList.toggle('dark', isDark);
-    setResolvedTheme(isDark ? 'dark' : 'light');
+    localStorage.setItem(THEME_KEY, theme);
+  }, [theme]);
+
+  // 监听系统主题变化
+  useEffect(() => {
+    if (theme !== 'system') return;
+
+    const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+    const handler = (e: MediaQueryListEvent) => {
+      setResolvedTheme(e.matches ? 'dark' : 'light');
+      document.documentElement.classList.remove('light', 'dark');
+      document.documentElement.classList.add(e.matches ? 'dark' : 'light');
+    };
+
+    mediaQuery.addEventListener('change', handler);
+    return () => mediaQuery.removeEventListener('change', handler);
+  }, [theme]);
+
+  const setTheme = useCallback((newTheme: Theme) => {
+    setThemeState(newTheme);
   }, []);
 
-  // 初始化和监听
-  useEffect(() => {
-    applyTheme(theme);
-    localStorage.setItem(STORAGE_KEYS.THEME, theme);
+  const toggleTheme = useCallback(() => {
+    setThemeState(prev => {
+      if (prev === 'light') return 'dark';
+      if (prev === 'dark') return 'system';
+      return 'light';
+    });
+  }, []);
 
-    if (theme === 'system') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      const handleChange = () => applyTheme('system');
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-  }, [theme, applyTheme]);
-
-  const setLightTheme = () => setTheme('light');
-  const setDarkTheme = () => setTheme('dark');
-  const setSystemTheme = () => setTheme('system');
-
-  return {
-    theme,
-    resolvedTheme,
-    setTheme,
-    setLightTheme,
-    setDarkTheme,
-    setSystemTheme,
-  };
+  return { theme, resolvedTheme, setTheme, toggleTheme };
 }

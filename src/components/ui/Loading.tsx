@@ -1,67 +1,66 @@
 import { cn } from '@/utils/helpers';
 
-interface LoadingProps {
-  size?: 'sm' | 'md' | 'lg';
+export interface SpinnerProps {
+  size?: 'sm' | 'md' | 'lg' | 'xl';
   className?: string;
 }
 
-export function Loading({ size = 'md', className }: LoadingProps) {
+const sizeStyles = {
+  sm: 'w-4 h-4 border-2',
+  md: 'w-6 h-6 border-2',
+  lg: 'w-8 h-8 border-3',
+  xl: 'w-12 h-12 border-4',
+};
+
+export function Spinner({ size = 'md', className }: SpinnerProps) {
   return (
-    <div className={cn('flex items-center justify-center', className)}>
-      <svg
-        className={cn(
-          'animate-spin text-primary',
-          size === 'sm' && 'w-4 h-4',
-          size === 'md' && 'w-6 h-6',
-          size === 'lg' && 'w-8 h-8'
-        )}
-        xmlns="http://www.w3.org/2000/svg"
-        fill="none"
-        viewBox="0 0 24 24"
-      >
-        <circle
-          className="opacity-25"
-          cx="12"
-          cy="12"
-          r="10"
-          stroke="currentColor"
-          strokeWidth="4"
-        />
-        <path
-          className="opacity-75"
-          fill="currentColor"
-          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-        />
-      </svg>
-    </div>
+    <div
+      className={cn(
+        'rounded-full border-gray-200 dark:border-gray-700 border-t-primary-500 animate-spin',
+        sizeStyles[size],
+        className
+      )}
+    />
   );
 }
 
-interface SpinnerProps {
+export interface SkeletonProps {
   className?: string;
+  rounded?: 'none' | 'sm' | 'md' | 'lg' | 'full';
 }
 
-export function Spinner({ className }: SpinnerProps) {
+const roundedStyles = {
+  none: 'rounded-none',
+  sm: 'rounded-sm',
+  md: 'rounded-md',
+  lg: 'rounded-lg',
+  full: 'rounded-full',
+};
+
+export function Skeleton({ className, rounded = 'md' }: SkeletonProps) {
   return (
-    <svg
-      className={cn('animate-spin h-5 w-5', className)}
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      />
-    </svg>
+    <div
+      className={cn(
+        'bg-gray-200 dark:bg-gray-700 animate-pulse',
+        roundedStyles[rounded],
+        className
+      )}
+    />
+  );
+}
+
+export interface LoadingProps {
+  text?: string;
+  size?: 'sm' | 'md' | 'lg' | 'xl';
+}
+
+export function Loading({ text = '加载中...', size = 'lg' }: LoadingProps) {
+  return (
+    <div className="flex flex-col items-center justify-center gap-3">
+      <Spinner size={size} />
+      {text && (
+        <p className="text-sm text-gray-500 dark:text-gray-400">{text}</p>
+      )}
+    </div>
   );
 }
