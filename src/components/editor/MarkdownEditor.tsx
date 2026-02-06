@@ -41,17 +41,27 @@ export function MarkdownEditor({
   }
 
   // 自定义标题命令（只显示图标）
+  const titleIconStyle = {
+    fontSize: '11px',
+    fontWeight: 700,
+    width: '16px',
+    height: '16px',
+    display: 'inline-flex',
+    alignItems: 'center',
+    justifyContent: 'center'
+  } as const;
+
   const title1: typeof commands.title1 = {
     ...commands.title1,
-    icon: <span style={{ fontSize: '12px', fontWeight: 'bold' }}>H1</span>,
+    icon: <span style={titleIconStyle}>H1</span>,
   };
   const title2: typeof commands.title2 = {
     ...commands.title2,
-    icon: <span style={{ fontSize: '12px', fontWeight: 'bold' }}>H2</span>,
+    icon: <span style={titleIconStyle}>H2</span>,
   };
   const title3: typeof commands.title3 = {
     ...commands.title3,
-    icon: <span style={{ fontSize: '12px', fontWeight: 'bold' }}>H3</span>,
+    icon: <span style={titleIconStyle}>H3</span>,
   };
 
   // 基础工具栏（单行）
