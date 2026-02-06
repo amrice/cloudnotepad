@@ -178,6 +178,12 @@ body {
   color: #F1F5F9 !important;
 }
 
+/* 深色模式下编辑区语法高亮 */
+.dark .md-editor-wrapper .w-md-editor-text-pre > code,
+.dark .md-editor-wrapper .w-md-editor-text-pre > code * {
+  color: #F1F5F9 !important;
+}
+
 /* 编辑区背景 */
 .md-editor-wrapper .w-md-editor-area {
   background-color: #FFFFFF !important;
