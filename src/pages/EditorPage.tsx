@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { notesApi } from '@/services/notes';
-import { TiptapEditor } from '@/components/editor';
+import { MarkdownEditor } from '@/components/editor';
 import { Button, Loading } from '@/components/ui';
 import { ChevronLeft, Save, Share2, Check, AlertCircle } from 'lucide-react';
 import { cn } from '@/utils/helpers';
@@ -160,15 +160,13 @@ export function EditorPage() {
       </header>
 
       {/* Editor */}
-      <main className="flex-1 overflow-auto">
-        <div className="max-w-3xl mx-auto px-4 py-6">
-          <TiptapEditor
-            content={content}
-            onChange={setContent}
-            placeholder="开始写作..."
-            className="min-h-[calc(100vh-200px)] prose dark:prose-invert max-w-none"
-          />
-        </div>
+      <main className="flex-1 overflow-hidden">
+        <MarkdownEditor
+          content={content}
+          onChange={setContent}
+          placeholder="开始写作..."
+          className="h-[calc(100vh-56px)]"
+        />
       </main>
     </div>
   );

@@ -1,1 +1,1 @@
-export { TiptapEditor } from './TiptapEditor';
+export { MarkdownEditor } from './MarkdownEditor';
