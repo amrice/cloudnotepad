@@ -12,3 +12,5 @@ export type { SpinnerProps, SkeletonProps, LoadingProps } from './Loading';
 
 export { Toast } from './Toast';
 export { ToastContainer } from './ToastContainer';
+
+export { ShareDialog } from './ShareDialog';

@@ -39,6 +39,11 @@ export const notesApi = {
     return api.put<Note>(`/notes/${data.id}`, data);
   },
 
+  // 部分更新笔记（仅更新传入的字段）
+  async partialUpdate(data: { id: string; title?: string; content?: string; version: number }) {
+    return api.put<Note>(`/notes/${data.id}`, data);
+  },
+
   // 更新笔记（增量）
   async patch(data: PatchNoteInput) {
     return api.post<Note>(`/notes/${data.id}/patch`, data);
