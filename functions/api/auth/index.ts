@@ -238,3 +238,41 @@ export async function handleChangePassword(request: Request): Promise<Response> 
     return error(500, '修改密码失败');
   }
 }
+
+// 重置系统 - 删除所有 KV 数据
+export async function handleReset(request: Request): Promise<Response> {
+  try {
+    // 验证登录状态
+    const authResult = await authMiddleware(request);
+    if (authResult) {
+      return authResult;
+    }
+
+    // 验证密码
+    const { password } = await request.json();
+    const storedHash = await KV.get('config:password');
+    const inputHash = await hashPassword(password);
+
+    if (inputHash !== storedHash) {
+      return error(401, '密码错误');
+    }
+
+    // 获取所有 key 并删除
+    const result = await KV.list({ limit: 1000 });
+    const keys = result?.keys || [];
+
+    for (const key of keys) {
+      const keyName = typeof key === 'string' ? key : (key.key || key.name);
+      if (keyName) {
+        await KV.delete(keyName);
+      }
+    }
+
+    // 清除 Cookie
+    const cookie = clearAuthCookie();
+    return jsonWithCookie({ success: true, deleted: keys.length }, cookie);
+  } catch (err) {
+    console.error('Reset error:', err);
+    return error(500, '重置失败: ' + String(err));
+  }
+}

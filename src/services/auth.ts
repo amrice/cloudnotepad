@@ -34,4 +34,11 @@ export const authApi = {
       newPassword,
     });
   },
+
+  // 重置系统
+  async reset(password: string) {
+    return api.post<{ success: boolean; deleted: number }>('/auth/reset', {
+      password,
+    });
+  },
 };

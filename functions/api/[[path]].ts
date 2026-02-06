@@ -51,6 +51,11 @@ export async function onRequest(
     return handleChangePassword(request);
   }
 
+  if (path === '/api/auth/reset' && method === 'POST') {
+    const { handleReset } = await import('./auth/index.js');
+    return handleReset(request);
+  }
+
   // 公开分享访问（无需登录）
   if (path.match(/^\/api\/share\/[^/]+\/check$/) && method === 'GET') {
     const parts = path.split('/');

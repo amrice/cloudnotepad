@@ -5,7 +5,7 @@ import { notesApi } from '@/services/notes';
 import { Button, Input, Loading, Dialog } from '@/components/ui';
 import {
   Plus, Search, FileText, Sun, Moon, Monitor, Settings, Key, LogOut,
-  LayoutGrid, List, MoreVertical, Trash2, Edit3, CheckSquare, Square, X
+  LayoutGrid, List, MoreVertical, Trash2, Edit3, CheckSquare, Square, X, RotateCcw
 } from 'lucide-react';
 import { cn } from '@/utils/helpers';
 import { formatRelativeTime } from '@/utils/date';
@@ -14,6 +14,7 @@ import { useAuthStore } from '@/stores/authStore';
 import { useNoteListStore } from '@/stores/noteListStore';
 import { ChangePasswordDialog } from '@/components/ChangePasswordDialog';
 import { toast } from '@/stores/toastStore';
+import { authApi } from '@/services/auth';
 
 export function HomePage() {
   const navigate = useNavigate();
@@ -21,6 +22,9 @@ export function HomePage() {
   const [search, setSearch] = useState('');
   const [showSettings, setShowSettings] = useState(false);
   const [showChangePassword, setShowChangePassword] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetPassword, setResetPassword] = useState('');
+  const [resetLoading, setResetLoading] = useState(false);
   const [deleteConfirm, setDeleteConfirm] = useState<{ id: string; title: string } | null>(null);
   const [batchDeleteConfirm, setBatchDeleteConfirm] = useState(false);
   const settingsRef = useRef<HTMLDivElement>(null);
@@ -177,6 +181,16 @@ export function HomePage() {
                   >
                     <Key className="w-4 h-4" />
                     修改密码
+                  </button>
+                  <button
+                    onClick={() => {
+                      setShowResetConfirm(true);
+                      setShowSettings(false);
+                    }}
+                    className="w-full px-4 py-2 text-left text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 flex items-center gap-2"
+                  >
+                    <RotateCcw className="w-4 h-4" />
+                    重置系统
                   </button>
                   <div className="border-t border-gray-200 dark:border-gray-700 my-1" />
                   <button
@@ -372,6 +386,58 @@ export function HomePage() {
         <p className="text-gray-600 dark:text-gray-400">
           确定要删除选中的 {selectedIds.size} 篇笔记吗？此操作不可恢复。
         </p>
+      </Dialog>
+
+      {/* 重置系统确认弹窗 */}
+      <Dialog
+        open={showResetConfirm}
+        onOpenChange={(open) => {
+          setShowResetConfirm(open);
+          if (!open) setResetPassword('');
+        }}
+        title="重置系统"
+        description="此操作将删除所有数据，恢复到初始状态"
+        size="sm"
+        footer={
+          <>
+            <Button variant="ghost" onClick={() => {
+              setShowResetConfirm(false);
+              setResetPassword('');
+            }}>
+              取消
+            </Button>
+            <Button
+              variant="danger"
+              disabled={!resetPassword || resetLoading}
+              onClick={async () => {
+                setResetLoading(true);
+                try {
+                  await authApi.reset(resetPassword);
+                  toast.success('重置成功');
+                  window.location.href = '/setup';
+                } catch (err) {
+                  toast.error(err instanceof Error ? err.message : '重置失败');
+                } finally {
+                  setResetLoading(false);
+                }
+              }}
+            >
+              {resetLoading ? '重置中...' : '确认重置'}
+            </Button>
+          </>
+        }
+      >
+        <div className="space-y-3">
+          <p className="text-sm text-red-600 dark:text-red-400">
+            警告：此操作将删除所有笔记、标签、分享链接和配置，不可恢复！
+          </p>
+          <Input
+            type="password"
+            placeholder="请输入密码确认"
+            value={resetPassword}
+            onChange={(e) => setResetPassword(e.target.value)}
+          />
+        </div>
       </Dialog>
     </div>
   );
