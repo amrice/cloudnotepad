@@ -100,14 +100,19 @@ body {
 .md-editor-wrapper {
   width: 100%;
   height: 100%;
+  display: flex;
+  flex-direction: column;
 }
 
-/* 编辑器容器 */
+/* 编辑器容器 - 自适应占满屏幕 */
 .md-editor-wrapper .w-md-editor {
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
   background-color: #FFFFFF !important;
+  flex: 1 !important;
+  display: flex !important;
+  flex-direction: column !important;
 }
 
 .dark .md-editor-wrapper .w-md-editor {
@@ -127,11 +132,18 @@ body {
   background-color: #0F172A !important;
 }
 
-/* 工具栏按钮 */
+/* 工具栏按钮 - 放大30% */
 .md-editor-wrapper .w-md-editor-toolbar button {
   color: #64748B !important;
   border-radius: 6px !important;
   margin: 0 2px !important;
+  width: 32px !important;
+  height: 32px !important;
+}
+
+.md-editor-wrapper .w-md-editor-toolbar button svg {
+  width: 18px !important;
+  height: 18px !important;
 }
 
 .md-editor-wrapper .w-md-editor-toolbar button:hover {
@@ -157,14 +169,15 @@ body {
   background-color: #334155 !important;
 }
 
-/* 内容区域 */
+/* 内容区域 - 自适应高度 */
 .md-editor-wrapper .w-md-editor-content {
-  height: calc(100% - 40px) !important;
-  background-color: #FFFFFF !important;
+  flex: 1 !important;
+  height: auto !important;
+  min-height: 0 !important;
 }
 
 .dark .md-editor-wrapper .w-md-editor-content {
-  background-color: #1E293B !important;
+  background-color: transparent !important;
 }
 
 /* 编辑区域 - 保持默认等宽字体避免光标错位 */
@@ -184,32 +197,34 @@ body {
   color: #F1F5F9 !important;
 }
 
-/* 编辑区背景 */
+/* 编辑区背景 - 稍微区分颜色 */
 .md-editor-wrapper .w-md-editor-area {
-  background-color: #FFFFFF !important;
+  background-color: #FAFBFC !important;
 }
 
 .dark .md-editor-wrapper .w-md-editor-area {
-  background-color: #1E293B !important;
+  background-color: #151D2E !important;
 }
 
-/* 预览区域 */
+/* 预览区域 - 稍微区分颜色 */
 .md-editor-wrapper .w-md-editor-preview {
-  background-color: #FFFFFF !important;
+  background-color: #F8FAFC !important;
   padding: 16px 20px !important;
 }
 
 .dark .md-editor-wrapper .w-md-editor-preview {
-  background-color: #1E293B !important;
+  background-color: #1A2332 !important;
 }
 
-/* 预览区分隔线 */
+/* 预览区分隔线 - 优化样式 */
 .md-editor-wrapper .w-md-editor-content > .w-md-editor-preview {
-  border-left: 1px solid #E2E8F0 !important;
+  border-left: 2px solid #E2E8F0 !important;
+  box-shadow: -4px 0 8px -4px rgba(0, 0, 0, 0.05) !important;
 }
 
 .dark .md-editor-wrapper .w-md-editor-content > .w-md-editor-preview {
-  border-left-color: #334155 !important;
+  border-left-color: #3B4A5F !important;
+  box-shadow: -4px 0 8px -4px rgba(0, 0, 0, 0.3) !important;
 }
 
 /* 预览区 Markdown 内容样式 */
