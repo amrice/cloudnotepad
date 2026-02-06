@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { notesApi } from '@/services/notes';
 import { MarkdownEditor } from '@/components/editor';
 import { Button, Loading, ShareDialog } from '@/components/ui';
@@ -13,6 +13,7 @@ type SaveStatusType = 'idle' | 'saved' | 'saving' | 'unsaved' | 'error';
 export function EditorPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const queryClient = useQueryClient();
 
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
@@ -24,7 +25,6 @@ export function EditorPage() {
   const prevContentRef = useRef({ title: '', content: '' });
   const serverContentRef = useRef({ title: '', content: '', version: 0 });
   const isInitialMount = useRef(true);
-  const justCreatedRef = useRef(false); // 标记刚创建的笔记
   const [showShareDialog, setShowShareDialog] = useState(false);
 
   const isNew = !noteId;
@@ -105,7 +105,8 @@ export function EditorPage() {
       if (isNew) {
         // 新笔记：创建
         savedNote = await notesApi.create({ title, content, tags: [] });
-        justCreatedRef.current = true; // 标记刚创建
+        // 预填充缓存，避免 useQuery 重新请求
+        queryClient.setQueryData(['note', savedNote.id], savedNote);
         setNoteId(savedNote.id);
         // 静默更新 URL，不触发路由重新渲染
         window.history.replaceState(null, '', `/note/${savedNote.id}`);
@@ -169,11 +170,6 @@ export function EditorPage() {
 
   // 初始化内容
   useEffect(() => {
-    // 刚创建的笔记，跳过初始化（避免覆盖当前编辑内容）
-    if (justCreatedRef.current) {
-      justCreatedRef.current = false;
-      return;
-    }
     if (note) {
       setTitle(note.title || '');
       setContent(note.content || '');
