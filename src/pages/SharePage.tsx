@@ -166,7 +166,7 @@ export function SharePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
+    <div className="min-h-screen w-full bg-gray-50 dark:bg-gray-950">
       {/* Header */}
       <header className={cn(
         'sticky top-0 z-20 h-14',
