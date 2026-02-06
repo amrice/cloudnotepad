@@ -1,178 +1,97 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
-@layer base {
-  :root {
-    color-scheme: light dark;
-  }
+@theme {
+  /* 主题色 */
+  --color-primary-50: #eff6ff;
+  --color-primary-100: #dbeafe;
+  --color-primary-200: #bfdbfe;
+  --color-primary-300: #93c5fd;
+  --color-primary-400: #60a5fa;
+  --color-primary-500: #3b82f6;
+  --color-primary-600: #2563eb;
+  --color-primary-700: #1d4ed8;
+  --color-primary-800: #1e40af;
+  --color-primary-900: #1e3a8a;
+  --color-primary: #3b82f6;
 
-  html {
-    font-family: 'Inter', system-ui, sans-serif;
-    -webkit-font-smoothing: antialiased;
-    -moz-osx-font-smoothing: grayscale;
-  }
+  /* 白天模式 */
+  --color-light-bg: #F8FAFC;
+  --color-light-card: #FFFFFF;
+  --color-light-border: #E2E8F0;
+  --color-light-text: #1E293B;
+  --color-light-muted: #64748B;
 
-  body {
-    @apply bg-light-bg dark:bg-dark-bg text-light-text dark:text-dark-text;
-    @apply min-h-screen;
-    @apply overflow-hidden;
-  }
+  /* 黑夜模式 */
+  --color-dark-bg: #0F172A;
+  --color-dark-card: #1E293B;
+  --color-dark-border: #334155;
+  --color-dark-text: #F1F5F9;
+  --color-dark-muted: #94A3B8;
 
-  /* 自定义滚动条 */
-  ::-webkit-scrollbar {
-    @apply w-2 h-2;
-  }
+  /* 字体 */
+  --font-sans: 'Inter', system-ui, sans-serif;
 
-  ::-webkit-scrollbar-track {
-    @apply bg-transparent;
-  }
-
-  ::-webkit-scrollbar-thumb {
-    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
-  }
-
-  ::-webkit-scrollbar-thumb:hover {
-    @apply bg-gray-400 dark:bg-gray-500;
-  }
+  /* 动画 */
+  --animate-fade-in: fadeIn 0.2s ease-out;
+  --animate-slide-in: slideIn 0.3s ease-out;
 }
 
-@layer components {
-  /* 按钮基础样式 */
-  .btn {
-    @apply inline-flex items-center justify-center gap-2;
-    @apply px-4 py-2 rounded-lg font-medium;
-    @apply transition-all duration-200;
-    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2;
-    @apply disabled:opacity-50 disabled:cursor-not-allowed;
-  }
-
-  .btn-primary {
-    @apply btn bg-primary text-white hover:bg-primary/90;
-  }
-
-  .btn-secondary {
-    @apply btn bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100;
-    @apply hover:bg-gray-200 dark:hover:bg-gray-700;
-  }
-
-  .btn-danger {
-    @apply btn bg-red-500 text-white hover:bg-red-600;
-  }
-
-  .btn-ghost {
-    @apply btn bg-transparent hover:bg-gray-100 dark:hover:bg-gray-800;
-  }
-
-  /* 输入框基础样式 */
-  .input {
-    @apply w-full px-4 py-2;
-    @apply bg-white dark:bg-gray-800;
-    @apply border border-gray-300 dark:border-gray-600;
-    @apply rounded-lg;
-    @apply focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent;
-    @apply placeholder:text-gray-400 dark:placeholder:text-gray-500;
-    @apply transition-all duration-200;
-  }
-
-  /* 卡片基础样式 */
-  .card {
-    @apply bg-white dark:bg-gray-800;
-    @apply border border-gray-200 dark:border-gray-700;
-    @apply rounded-xl;
-    @apply shadow-sm;
-  }
-
-  /* Prose 样式 */
-  .prose {
-    @apply text-gray-800 dark:text-gray-200;
-  }
-
-  .prose h1, .prose h2, .prose h3, .prose h4 {
-    @apply font-semibold text-gray-900 dark:text-gray-100;
-    @apply mt-6 mb-4;
-  }
-
-  .prose h1 { @apply text-2xl; }
-  .prose h2 { @apply text-xl; }
-  .prose h3 { @apply text-lg; }
-
-  .prose p {
-    @apply mb-4 leading-relaxed;
-  }
-
-  .prose a {
-    @apply text-primary hover:underline;
-  }
-
-  .prose code {
-    @apply px-1.5 py-0.5;
-    @apply bg-gray-100 dark:bg-gray-800;
-    @apply rounded text-sm font-mono;
-  }
-
-  .prose pre {
-    @apply p-4;
-    @apply bg-gray-900 dark:bg-gray-950;
-    @apply rounded-lg overflow-x-auto;
-  }
-
-  .prose pre code {
-    @apply bg-transparent p-0;
-  }
-
-  .prose blockquote {
-    @apply pl-4;
-    @apply border-l-4 border-primary;
-    @apply text-gray-600 dark:text-gray-400;
-    @apply italic;
-  }
-
-  .prose ul, .prose ol {
-    @apply pl-6 mb-4;
-  }
-
-  .prose ul { @apply list-disc; }
-  .prose ol { @apply list-decimal; }
-
-  .prose li {
-    @apply mb-1;
-  }
-
-  .prose img {
-    @apply rounded-lg;
-    @apply max-w-full;
-  }
-
-  .prose table {
-    @apply w-full border-collapse;
-    @apply mb-4;
-  }
-
-  .prose th, .prose td {
-    @apply px-4 py-2;
-    @apply border border-gray-200 dark:border-gray-700;
-    @apply text-left;
-  }
-
-  .prose th {
-    @apply bg-gray-50 dark:bg-gray-900;
-    @apply font-semibold;
-  }
+@keyframes fadeIn {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
 }
 
-@layer utilities {
-  .line-clamp-2 {
-    display: -webkit-box;
-    -webkit-line-clamp: 2;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+@keyframes slideIn {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(0); }
+}
 
-  .line-clamp-3 {
-    display: -webkit-box;
-    -webkit-line-clamp: 3;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+/* 基础样式 */
+:root {
+  color-scheme: light dark;
+}
+
+html {
+  font-family: 'Inter', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: var(--color-light-bg);
+  color: var(--color-light-text);
+  min-height: 100vh;
+  overflow: hidden;
+}
+
+.dark body {
+  background-color: var(--color-dark-bg);
+  color: var(--color-dark-text);
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 0.5rem;
+  height: 0.5rem;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 9999px;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #4b5563;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #6b7280;
 }

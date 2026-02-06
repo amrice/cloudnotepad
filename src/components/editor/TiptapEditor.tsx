@@ -1,4 +1,5 @@
-import { useEditor, EditorContent, BubbleMenu } from '@tiptap/react';
+import { useEditor, EditorContent } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import Placeholder from '@tiptap/extension-placeholder';
 import Link from '@tiptap/extension-link';
@@ -103,7 +104,7 @@ export function TiptapEditor({
     <div className={cn('editor-container flex flex-col h-full', className)}>
       {/* 浮动工具栏 (PC端选中文字时显示) */}
       {!readOnly && editor.state.selection.from !== editor.state.selection.to && (
-        <BubbleMenu editor={editor} tippyOptions={{ duration: 100 }}>
+        <BubbleMenu editor={editor} options={{ placement: 'top', offset: 8 }}>
           <div className="flex gap-0.5 p-1 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700">
             <ToolbarButton
               onClick={() => editor.chain().focus().toggleBold().run()}
