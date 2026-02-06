@@ -11,7 +11,7 @@ export async function handleList(request: Request): Promise<Response> {
     const keys = result?.keys || [];
 
     for (const key of keys) {
-      const keyName = typeof key === 'string' ? key : key.name;
+      const keyName = typeof key === 'string' ? key : (key.key || key.name);
       if (!keyName) continue;
 
       const data = await KV.get(keyName, { type: 'json' });
@@ -34,7 +34,7 @@ export async function handleGroups(request: Request): Promise<Response> {
     const keys = result?.keys || [];
 
     for (const key of keys) {
-      const keyName = typeof key === 'string' ? key : key.name;
+      const keyName = typeof key === 'string' ? key : (key.key || key.name);
       if (!keyName) continue;
 
       const data = await KV.get(keyName, { type: 'json' });
@@ -53,7 +53,7 @@ export async function handleGroups(request: Request): Promise<Response> {
     const groupKeys = groupList?.keys || [];
 
     for (const key of groupKeys) {
-      const keyName = typeof key === 'string' ? key : key.name;
+      const keyName = typeof key === 'string' ? key : (key.key || key.name);
       if (!keyName) continue;
 
       const groupData = await KV.get(keyName, { type: 'json' });

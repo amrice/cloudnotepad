@@ -19,7 +19,7 @@ export async function handleSearch(request: Request): Promise<Response> {
     const keys = result?.keys || [];
 
     for (const key of keys) {
-      const keyName = typeof key === 'string' ? key : key.name;
+      const keyName = typeof key === 'string' ? key : (key.key || key.name);
       if (!keyName) continue;
 
       const data = await KV.get(keyName, { type: 'json' });
