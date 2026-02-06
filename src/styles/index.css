@@ -96,32 +96,199 @@ body {
   background: #6b7280;
 }
 
-/* Markdown 编辑器样式 */
+/* Markdown 编辑器样式 - 与项目 UI 风格统一 */
 .md-editor-wrapper {
   width: 100%;
   height: 100%;
 }
 
+/* 编辑器容器 */
 .md-editor-wrapper .w-md-editor {
   border: none !important;
   border-radius: 0 !important;
   box-shadow: none !important;
+  background-color: #FFFFFF !important;
 }
 
+.dark .md-editor-wrapper .w-md-editor {
+  background-color: #1E293B !important;
+}
+
+/* 工具栏 */
 .md-editor-wrapper .w-md-editor-toolbar {
-  border-bottom: 1px solid #e2e8f0 !important;
-  background: transparent !important;
+  border-bottom: 1px solid #E2E8F0 !important;
+  background-color: #F8FAFC !important;
+  padding: 6px 8px !important;
+  min-height: 40px !important;
 }
 
 .dark .md-editor-wrapper .w-md-editor-toolbar {
   border-bottom-color: #334155 !important;
+  background-color: #0F172A !important;
 }
 
+/* 工具栏按钮 */
+.md-editor-wrapper .w-md-editor-toolbar button {
+  color: #64748B !important;
+  border-radius: 6px !important;
+  margin: 0 2px !important;
+}
+
+.md-editor-wrapper .w-md-editor-toolbar button:hover {
+  background-color: #E2E8F0 !important;
+  color: #1E293B !important;
+}
+
+.dark .md-editor-wrapper .w-md-editor-toolbar button {
+  color: #94A3B8 !important;
+}
+
+.dark .md-editor-wrapper .w-md-editor-toolbar button:hover {
+  background-color: #334155 !important;
+  color: #F1F5F9 !important;
+}
+
+/* 工具栏分隔线 */
+.md-editor-wrapper .w-md-editor-toolbar-divider {
+  background-color: #E2E8F0 !important;
+}
+
+.dark .md-editor-wrapper .w-md-editor-toolbar-divider {
+  background-color: #334155 !important;
+}
+
+/* 内容区域 */
 .md-editor-wrapper .w-md-editor-content {
-  height: calc(100% - 29px) !important;
+  height: calc(100% - 40px) !important;
+  background-color: #FFFFFF !important;
 }
 
+.dark .md-editor-wrapper .w-md-editor-content {
+  background-color: #1E293B !important;
+}
+
+/* 编辑区域 */
 .md-editor-wrapper .w-md-editor-text-input,
 .md-editor-wrapper .w-md-editor-text-pre {
   font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 15px !important;
+  line-height: 1.7 !important;
+  color: #1E293B !important;
+}
+
+.dark .md-editor-wrapper .w-md-editor-text-input,
+.dark .md-editor-wrapper .w-md-editor-text-pre {
+  color: #F1F5F9 !important;
+}
+
+/* 编辑区背景 */
+.md-editor-wrapper .w-md-editor-area {
+  background-color: #FFFFFF !important;
+}
+
+.dark .md-editor-wrapper .w-md-editor-area {
+  background-color: #1E293B !important;
+}
+
+/* 预览区域 */
+.md-editor-wrapper .w-md-editor-preview {
+  background-color: #FFFFFF !important;
+  padding: 16px 20px !important;
+}
+
+.dark .md-editor-wrapper .w-md-editor-preview {
+  background-color: #1E293B !important;
+}
+
+/* 预览区分隔线 */
+.md-editor-wrapper .w-md-editor-content > .w-md-editor-preview {
+  border-left: 1px solid #E2E8F0 !important;
+}
+
+.dark .md-editor-wrapper .w-md-editor-content > .w-md-editor-preview {
+  border-left-color: #334155 !important;
+}
+
+/* 预览区 Markdown 内容样式 */
+.md-editor-wrapper .wmde-markdown {
+  font-family: 'Inter', system-ui, sans-serif !important;
+  font-size: 15px !important;
+  line-height: 1.7 !important;
+  color: #1E293B !important;
+  background-color: transparent !important;
+}
+
+.dark .md-editor-wrapper .wmde-markdown {
+  color: #F1F5F9 !important;
+}
+
+/* 标题样式 */
+.md-editor-wrapper .wmde-markdown h1,
+.md-editor-wrapper .wmde-markdown h2,
+.md-editor-wrapper .wmde-markdown h3,
+.md-editor-wrapper .wmde-markdown h4 {
+  color: #1E293B !important;
+  border-bottom-color: #E2E8F0 !important;
+}
+
+.dark .md-editor-wrapper .wmde-markdown h1,
+.dark .md-editor-wrapper .wmde-markdown h2,
+.dark .md-editor-wrapper .wmde-markdown h3,
+.dark .md-editor-wrapper .wmde-markdown h4 {
+  color: #F1F5F9 !important;
+  border-bottom-color: #334155 !important;
+}
+
+/* 代码块样式 */
+.md-editor-wrapper .wmde-markdown code {
+  background-color: #F1F5F9 !important;
+  color: #1E293B !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+}
+
+.dark .md-editor-wrapper .wmde-markdown code {
+  background-color: #334155 !important;
+  color: #F1F5F9 !important;
+}
+
+.md-editor-wrapper .wmde-markdown pre {
+  background-color: #F1F5F9 !important;
+  border-radius: 8px !important;
+}
+
+.dark .md-editor-wrapper .wmde-markdown pre {
+  background-color: #0F172A !important;
+}
+
+/* 链接样式 */
+.md-editor-wrapper .wmde-markdown a {
+  color: #3b82f6 !important;
+}
+
+.md-editor-wrapper .wmde-markdown a:hover {
+  color: #2563eb !important;
+}
+
+/* 引用块样式 */
+.md-editor-wrapper .wmde-markdown blockquote {
+  border-left-color: #3b82f6 !important;
+  background-color: #F8FAFC !important;
+  color: #64748B !important;
+}
+
+.dark .md-editor-wrapper .wmde-markdown blockquote {
+  background-color: #1E293B !important;
+  color: #94A3B8 !important;
+}
+
+/* 表格样式 */
+.md-editor-wrapper .wmde-markdown table th,
+.md-editor-wrapper .wmde-markdown table td {
+  border-color: #E2E8F0 !important;
+}
+
+.dark .md-editor-wrapper .wmde-markdown table th,
+.dark .md-editor-wrapper .wmde-markdown table td {
+  border-color: #334155 !important;
 }
