@@ -65,9 +65,16 @@ async function uploadToGithub(
   const filename = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
   const filePath = `${path}/${filename}`.replace(/\/+/g, '/');
 
-  // 读取文件内容并转为 Base64
+  // 读取文件内容并转为 Base64（分块处理避免栈溢出）
   const buffer = await file.arrayBuffer();
-  const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+  const bytes = new Uint8Array(buffer);
+  let binary = '';
+  const chunkSize = 8192;
+  for (let i = 0; i < bytes.length; i += chunkSize) {
+    const chunk = bytes.subarray(i, i + chunkSize);
+    binary += String.fromCharCode.apply(null, chunk as unknown as number[]);
+  }
+  const base64 = btoa(binary);
 
   // 调用 GitHub API
   const res = await fetch(
