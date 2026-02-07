@@ -49,7 +49,9 @@ export function AdminPanel({ open, onClose }: AdminPanelProps) {
 
   const loadSettings = async () => {
     try {
-      const res = await fetch('/api/settings/imagebed');
+      const res = await fetch('/api/settings/imagebed', {
+        credentials: 'include',
+      });
       if (res.ok) {
         const data: ImageBedSettings = await res.json();
         setProvider(data.provider || 'github');
@@ -88,6 +90,7 @@ export function AdminPanel({ open, onClose }: AdminPanelProps) {
       const res = await fetch('/api/settings/imagebed', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify(settings),
       });
 
@@ -111,6 +114,7 @@ export function AdminPanel({ open, onClose }: AdminPanelProps) {
       const res = await fetch('/api/settings/imagebed/test', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
         body: JSON.stringify({
           provider,
           github: { token: githubToken, repo: githubRepo, branch: githubBranch },

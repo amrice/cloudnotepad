@@ -8,6 +8,7 @@ export const imagesApi = {
 
     const res = await fetch('/api/images/upload', {
       method: 'POST',
+      credentials: 'include',
       body: formData,
     });
 
@@ -23,6 +24,7 @@ export const imagesApi = {
   async delete(path: string): Promise<void> {
     const res = await fetch(`/api/images/delete?path=${encodeURIComponent(path)}`, {
       method: 'DELETE',
+      credentials: 'include',
     });
 
     if (!res.ok) {
