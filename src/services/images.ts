@@ -12,12 +12,13 @@ export const imagesApi = {
       body: formData,
     });
 
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || '上传失败');
+    const response = await res.json();
+
+    if (!res.ok || response.code !== 0) {
+      throw new Error(response.message || '上传失败');
     }
 
-    return res.json();
+    return response.data;
   },
 
   // 删除图片
@@ -27,9 +28,10 @@ export const imagesApi = {
       credentials: 'include',
     });
 
-    if (!res.ok) {
-      const data = await res.json();
-      throw new Error(data.error || '删除失败');
+    const response = await res.json();
+
+    if (!res.ok || response.code !== 0) {
+      throw new Error(response.message || '删除失败');
     }
   },
 };

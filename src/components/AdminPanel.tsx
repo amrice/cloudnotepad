@@ -53,13 +53,16 @@ export function AdminPanel({ open, onClose }: AdminPanelProps) {
         credentials: 'include',
       });
       if (res.ok) {
-        const data: ImageBedSettings = await res.json();
-        setProvider(data.provider || 'github');
-        if (data.github) {
-          setGithubToken(data.github.token || '');
-          setGithubRepo(data.github.repo || '');
-          setGithubBranch(data.github.branch || 'main');
-          setGithubPath(data.github.path || 'img/uploads');
+        const response = await res.json();
+        const data: ImageBedSettings = response.data;
+        if (data) {
+          setProvider(data.provider || 'github');
+          if (data.github) {
+            setGithubToken(data.github.token || '');
+            setGithubRepo(data.github.repo || '');
+            setGithubBranch(data.github.branch || 'main');
+            setGithubPath(data.github.path || 'img/uploads');
+          }
         }
       }
     } catch (err) {
