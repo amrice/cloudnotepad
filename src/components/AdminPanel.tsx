@@ -266,6 +266,10 @@ export function AdminPanel({ open, onClose }: AdminPanelProps) {
                   />
                 </div>
               </div>
+
+              <p className="text-xs text-amber-600 dark:text-amber-400">
+                单张图片最大 1MB（受边缘函数请求体限制）
+              </p>
             </div>
           )}
         </div>
