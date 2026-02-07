@@ -55,10 +55,10 @@ export async function onRequest(context: any): Promise<Response> {
 
 // 上传到 GitHub
 async function uploadToGithub(
-  config: { token: string; repo: string; branch: string; path: string },
+  config: { token: string; repo: string; branch: string; path: string; customDomain?: string; urlTemplate?: string },
   file: File
 ): Promise<string> {
-  const { token, repo, branch, path } = config;
+  const { token, repo, branch, path, customDomain, urlTemplate } = config;
 
   // 生成文件名
   const ext = file.name.split('.').pop() || 'jpg';
@@ -100,6 +100,16 @@ async function uploadToGithub(
     throw new Error(data.message || 'GitHub 上传失败');
   }
 
-  // 返回代理 URL
+  // 生成返回URL
+  if (customDomain && urlTemplate) {
+    // 使用自定义加速域名
+    const url = urlTemplate
+      .replace('{repo}', repo)
+      .replace('{branch}', branch)
+      .replace('{path}', filePath);
+    return `https://${customDomain}${url}`;
+  }
+
+  // 默认返回代理 URL
   return `/api/images/proxy?path=${encodeURIComponent(filePath)}`;
 }

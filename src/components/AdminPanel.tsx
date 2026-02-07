@@ -19,6 +19,8 @@ interface ImageBedSettings {
     repo: string;
     branch: string;
     path: string;
+    customDomain?: string;
+    urlTemplate?: string;
   };
 }
 
@@ -39,6 +41,8 @@ export function AdminPanel({ open, onClose }: AdminPanelProps) {
   const [githubRepo, setGithubRepo] = useState('');
   const [githubBranch, setGithubBranch] = useState('main');
   const [githubPath, setGithubPath] = useState('img/uploads');
+  const [githubCustomDomain, setGithubCustomDomain] = useState('');
+  const [githubUrlTemplate, setGithubUrlTemplate] = useState('/gh/{repo}@{branch}/{path}');
 
   // 加载配置
   useEffect(() => {
@@ -62,6 +66,8 @@ export function AdminPanel({ open, onClose }: AdminPanelProps) {
             setGithubRepo(data.github.repo || '');
             setGithubBranch(data.github.branch || 'main');
             setGithubPath(data.github.path || 'img/uploads');
+            setGithubCustomDomain(data.github.customDomain || '');
+            setGithubUrlTemplate(data.github.urlTemplate || '/gh/{repo}@{branch}/{path}');
           }
         }
       }
@@ -87,6 +93,8 @@ export function AdminPanel({ open, onClose }: AdminPanelProps) {
           repo: githubRepo,
           branch: githubBranch,
           path: githubPath,
+          customDomain: githubCustomDomain,
+          urlTemplate: githubUrlTemplate,
         } : undefined,
       };
 
@@ -265,6 +273,31 @@ export function AdminPanel({ open, onClose }: AdminPanelProps) {
                     onChange={(e) => setGithubPath(e.target.value)}
                   />
                 </div>
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  自定义加速域名（可选）
+                </label>
+                <Input
+                  placeholder="cdn.jsdelivr.net"
+                  value={githubCustomDomain}
+                  onChange={(e) => setGithubCustomDomain(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-sm text-gray-600 dark:text-gray-400 mb-1">
+                  URL 路径模板
+                </label>
+                <Input
+                  placeholder="/gh/{repo}@{branch}/{path}"
+                  value={githubUrlTemplate}
+                  onChange={(e) => setGithubUrlTemplate(e.target.value)}
+                />
+                <p className="mt-1 text-xs text-gray-400">
+                  支持变量：{'{repo}'} {'{branch}'} {'{path}'}
+                </p>
               </div>
 
               <p className="text-xs text-amber-600 dark:text-amber-400">
