@@ -1,5 +1,5 @@
-import { json, error } from '../../shared/types';
-import { authMiddleware } from '../auth/index';
+import { json, error } from '../../../shared/types';
+import { authMiddleware } from '../../auth/index';
 
 // POST /api/settings/imagebed/test - 测试图床连接
 export async function onRequest(context: any): Promise<Response> {
